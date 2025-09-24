@@ -59,7 +59,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>ManusSDK\include;PlatformSpecific;PlatformSpecific\Windows;PlatformSpecific;PlatformSpecific\Windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>ManusSDK\include;PlatformSpecific;PlatformSpecific\Windows;PlatformSpecific;PlatformSpecific\Windows;%(AdditionalIncludeDirectories);$(ProjectDir)\include</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -115,23 +115,23 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="PCANBasic.hpp" />
-    <ClInclude Include="ClientLogging.hpp" />
+    <ClInclude Include="include/PCANBasic.hpp" />
+    <ClInclude Include="include/ClientLogging.hpp" />
     <ClInclude Include="PlatformSpecific\ClientPlatformSpecific.hpp" />
     <ClInclude Include="PlatformSpecific\Windows\ClientPlatformSpecificTypes.hpp" />
-    <ClInclude Include="SDKClient.hpp" />
-    <ClInclude Include="MotorController.hpp" />
-    <ClInclude Include="math_utils.hpp" />
-    <ClInclude Include="GraphicInteractor.hpp" />
+    <ClInclude Include="include/SDKClient.hpp" />
+    <ClInclude Include="include/MotorController.hpp" />
+    <ClInclude Include="include/math_utils.hpp" />
+    <ClInclude Include="include/GraphicInteractor.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PCANBasic.cpp" />
+    <ClCompile Include="src/PCANBasic.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlatformSpecific\Windows\ClientPlatformSpecific.cpp" />
-    <ClCompile Include="SDKClient.cpp" />
-    <ClCompile Include="MotorController.cpp"/>
-    <ClCompile Include="math_utils.cpp"/>
-    <ClCompile Include="GraphicInteractor.cpp"/>
+    <ClCompile Include="src/SDKClient.cpp" />
+    <ClCompile Include="src/MotorController.cpp" />
+    <ClCompile Include="src/math_utils.cpp" />
+    <ClCompile Include="src/GraphicInteractor.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

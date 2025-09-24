@@ -1,49 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="src/PCANBasic.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="PlatformSpecific\Windows\ClientPlatformSpecific.cpp">
-      <Filter>Platform Specific</Filter>
-    </ClCompile>
-    <ClCompile Include="SDKClient.cpp">
-      <Filter>可执行文件</Filter>
-    </ClCompile>
-    <ClCompile Include="PCANBasic.cpp">
-      <Filter>可执行文件</Filter>
-    </ClCompile>
+    <ClCompile Include="PlatformSpecific\Windows\ClientPlatformSpecific.cpp" />
+    <ClCompile Include="src/SDKClient.cpp" />
+    <ClCompile Include="src/MotorController.cpp" />
+    <ClCompile Include="src/math_utils.cpp" />
+    <ClCompile Include="src/GraphicInteractor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PlatformSpecific\ClientPlatformSpecific.hpp">
-      <Filter>Platform Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="PlatformSpecific\Windows\ClientPlatformSpecificTypes.hpp">
-      <Filter>Platform Specific</Filter>
-    </ClInclude>
-    <ClInclude Include="ClientLogging.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="SDKClient.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClConpile Include="MotorController.cpp">
-      <Filter>可执行文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MotorController.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="PCANBasic.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Platform Specific">
-      <UniqueIdentifier>{cf12b9bc-fc75-4ff8-9a17-99e09e455122}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{2801cccc-ad14-465f-9c77-0199c154fef9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="可执行文件">
-      <UniqueIdentifier>{914b866d-8d61-47d4-896a-6c9c293f8b75}</UniqueIdentifier>
-    </Filter>
+    <ClInclude Include="include/PCANBasic.hpp" />
+    <ClInclude Include="include/ClientLogging.hpp" />
+    <ClInclude Include="PlatformSpecific\ClientPlatformSpecific.hpp" />
+    <ClInclude Include="PlatformSpecific\Windows\ClientPlatformSpecificTypes.hpp" />
+    <ClInclude Include="include/SDKClient.hpp" />
+    <ClInclude Include="include/MotorController.hpp" />
+    <ClInclude Include="include/math_utils.hpp" />
+    <ClInclude Include="include/GraphicInteractor.hpp" />
   </ItemGroup>
 </Project>

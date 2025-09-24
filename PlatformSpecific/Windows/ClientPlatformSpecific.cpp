@@ -14,7 +14,7 @@
 #include <fstream>
 #include <locale>
 #include <ShlObj_core.h>
-#include "../ClientLogging.hpp"
+#include "ClientLogging.hpp"
 #include <sstream>
 #include <Windows.h>
 

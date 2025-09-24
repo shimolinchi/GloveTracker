@@ -15,13 +15,20 @@
 # include "GraphicInteractor.hpp"
 
 
-
+/*
+  GraphThread:
+  - 初始化并运行窗口进程,用于与用户交互，显示手套与电机控制信息，（校正手指极限角度）。
+*/
 void GraphThread(GraphicInteractor* interactor)
 {
     interactor->Init();
     interactor->Run();
 }
 
+/*
+    SDKThread:
+    初始化并运行 SDK 客户端,与 ManusCore 进行通信。
+*/
 void SDKThread(SDKClient* client)
 {
     ClientReturnCode t_Result = client->Initialize();
@@ -38,45 +45,35 @@ void SDKThread(SDKClient* client)
         std::cerr << "[SDKThread] Run() failed with code " << static_cast<int>(t_Result) << std::endl;
     }
 }
-
+/*
+    CtrlThread:
+    运行电机控制线程，将手套数据转换成电机控制数据并发送。
+*/
 void CtrlThread(MotorController* controller)
 {
     controller->Run();
 }
 int main(int argc, char* argv[])
 {
-    ManusSDK::ClientLog::print("Starting SDK client!");
-
+    // SDK客户端初始化
     SDKClient sdk_client;
+    // pcan通信初始化
     PCANBasic pcan;
-
     TPCANHandle PcanHandle = PCAN_USBBUS1;
     TPCANBaudrate baudrate = PCAN_BAUD_1M;
     TPCANStatus result = pcan.Initialize(PcanHandle, baudrate);
+    // 电机控制器初始化
     MotorController controller(&pcan, PcanHandle, &sdk_client);
+    // 图形界面初始化
     GraphicInteractor interactor(&controller);
     
-
-    if (result != PCAN_ERROR_OK) {
-        std::string errorText;
-        pcan.GetErrorText(result, 0, errorText);
-        std::cerr << "Failed to initialize the PCAN device: " << errorText << " (Code: 0x" << std::hex << result << ")" << std::endl;
-        return 1;
-    }
-
-    std::cout << "PCAN device initialized successfully on handle " << std::hex << PcanHandle << "." << std::endl;
-
-
-    std::thread sdkRunner(SDKThread, &sdk_client);
+    // 线程启动
+    std::thread sdkclient_thread(SDKThread, &sdk_client);
     std::thread controller_thread(CtrlThread, &controller);
     std::thread interactor_thread(GraphThread, &interactor);
 
-    sdkRunner.join();
-
+    sdkclient_thread.join();
     interactor_thread.detach();
-
-    ManusSDK::ClientLog::print("SDK client is done, shutting down.");
-
-    ClientReturnCode t_Result = sdk_client.ShutDown();
-    return static_cast<int>(t_Result);
+    controller_thread.detach();
+    return 0;
 }
