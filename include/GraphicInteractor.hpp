@@ -13,8 +13,10 @@ enum class PanelState {
     MAIN_MENU,
     GLOVE_DATA,
     MOTOR_DATA,
+    CALIBRATE,
     EXIT
 };
+
 
 class GraphicInteractor {
 private:
@@ -32,7 +34,6 @@ private:
     std::vector<int> position_drive;
     PanelState state;
 
-
 public:
     GraphicInteractor( MotorController* controller);
     ~GraphicInteractor();
@@ -43,6 +44,7 @@ public:
     template <typename T>
     void PrintSpecificData(const T& data, int start_y, int start_x = 50);
     void UpdateData();
+    void StartCalibrate();
     void Init();
     void Run();
 };

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <stdexcept>
 
@@ -14,3 +15,6 @@
  * @throws std::invalid_argument 如果初始区间长度为0（即 from_min == from_max）
  */
 float LinearMap(float value, float from_min, float from_max, float to_min, float to_max) ;
+
+template <typename T>
+int sgn(T val);

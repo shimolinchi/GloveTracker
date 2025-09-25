@@ -17,3 +17,13 @@ float LinearMap(float value, float from_min, float from_max,
     // 映射到目标区间
     return to_min + (normalized * to_range);
 }
+
+template <typename T>
+int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+// 显式实例化 float/int/double 版本
+template int sgn<int>(int);
+template int sgn<float>(float);
+template int sgn<double>(double);

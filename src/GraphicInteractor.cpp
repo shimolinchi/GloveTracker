@@ -23,7 +23,7 @@ void GraphicInteractor::UpdateData() {
     right_hand_data = controller->client->GetGloveErgoData(false);
 
     velocity_now = controller->velocity_now;
-    velocity_drive = controller->current_drive;
+    velocity_drive = controller->velocity_drive;
     position_now = controller->position_now;
     position_drive = controller->position_drive;
 }
@@ -177,6 +177,55 @@ void GraphicInteractor::DrawTitle() {
     outtextxy(x, 50, text);
 }
 
+void GraphicInteractor::StartCalibrate(){
+    cleardevice();
+    settextcolor(WHITE);
+    settextstyle(32, 0, _T("Consolas"));
+    LPCTSTR text = _T("");
+    int winW  = getwidth();
+    controller->calibrating_process = CalibrateProcess::START;
+
+    // ---------- 第一段：3 秒 ----------
+    auto start1 = std::chrono::steady_clock::now();
+    while(controller->calibrating_process == CalibrateProcess::START){
+        cleardevice();
+        auto now = std::chrono::steady_clock::now();
+        int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start1).count();
+        int remain = 2 - elapsed;
+        if (remain <= 0) {
+            controller->calibrating_process = CalibrateProcess::STEP1;
+            break;
+        }
+        TCHAR buf[256];
+        _stprintf_s(buf,_T("Start calibrate in %d seconds, please put your hand flat on the table"),remain);
+        int textW = textwidth(buf);
+        int x = (winW - textW) / 2;
+        outtextxy(x, 50, buf);
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+
+    // ---------- 第二段：5 秒 ----------
+    auto start2 = std::chrono::steady_clock::now();
+    while(controller->calibrating_process == CalibrateProcess::STEP1){
+        cleardevice();
+        auto now = std::chrono::steady_clock::now();
+        int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start2).count();
+        int remain = 2 - elapsed;
+        if (remain <= 0) {
+            controller->calibrating_process = CalibrateProcess::SWITCH;
+            break;
+        }
+        TCHAR buf[256];
+        _stprintf_s(buf, _T("Calibrating! Hold this gesture in %d seconds"),remain);
+        int textW = textwidth(buf);
+        int x = (winW - textW) / 2;
+        outtextxy(x, 50, buf);
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
 // 打印任意数据到指定位置
 template <typename T>
 void GraphicInteractor::PrintSpecificData(const T& data, int start_y, int start_x ) {
@@ -236,6 +285,9 @@ void GraphicInteractor::Run() {
         DrawTitle();
 
         int data_start_y = 100;
+        if (controller->calibrating_process == CalibrateProcess::START){
+            StartCalibrate();
+        }
 
         // 主菜单界面
         if (state == PanelState::MAIN_MENU) {
@@ -258,12 +310,14 @@ void GraphicInteractor::Run() {
 
             bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY && mouse.y <= startY + btnHeight);
             bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing && mouse.y <= startY + spacing + btnHeight);
-            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
+            bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
+            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
 
             // 绘制按钮（居中）
             DrawButton(btnX1, startY,                 btnX2, startY + btnHeight,         _T("Check Glove Data"), hoverGlove);
             DrawButton(btnX1, startY + spacing,       btnX2, startY + spacing + btnHeight,_T("Check Motor Data"), hoverMotor);
-            DrawButton(btnX1, startY + spacing*2,    btnX2, startY + spacing*2 + btnHeight,_T("Exit Program"), hoverExit);
+            DrawButton(btnX1, startY + spacing*2,    btnX2, startY + spacing*2 + btnHeight,_T("Calibrate"), hoverCalibrate);
+            DrawButton(btnX1, startY + spacing*3,    btnX2, startY + spacing*3 + btnHeight,_T("Exit Program"), hoverExit);
 
             // 鼠标点击检测
             if (MouseHit()) {
@@ -272,6 +326,7 @@ void GraphicInteractor::Run() {
                     int x = msg.x, y = msg.y;
                     if (hoverGlove) state = PanelState::GLOVE_DATA;
                     else if (hoverMotor) state = PanelState::MOTOR_DATA;
+                    else if (hoverCalibrate)  state = PanelState::CALIBRATE;
                     else if (hoverExit)  state = PanelState::EXIT;
                 }
             }
@@ -297,6 +352,11 @@ void GraphicInteractor::Run() {
                     state = PanelState::MAIN_MENU;
                 }
             }
+        }
+        // ===== 手套校准界面 =====
+        else if (state == PanelState::CALIBRATE) {
+            StartCalibrate();
+            state = PanelState::MAIN_MENU;
         }
         // ===== 退出程序 =====
         else if (state == PanelState::EXIT) {

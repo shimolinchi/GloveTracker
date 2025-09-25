@@ -1,31 +1,25 @@
-﻿  Main.cpp
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\Main.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
-  
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(612,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
-  
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(1094,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
-  
+﻿  MotorController.cpp
+C:\Users\22261\OneDrive\文档\Project\GloveTracker\src\MotorController.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\stdafx.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
+  (编译源文件“src/MotorController.cpp”)
   
 C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\targetver.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
-  
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\math_utils.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
+  (编译源文件“src/MotorController.cpp”)
   
 C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\MotorController.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
+  (编译源文件“src/MotorController.cpp”)
+  
+C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“src/MotorController.cpp”)
+  
+C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(612,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“src/MotorController.cpp”)
+  
+C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\RyHandLib.h(1094,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“src/MotorController.cpp”)
   
 C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\math_utils.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
-  
-C:\Users\22261\OneDrive\文档\Project\GloveTracker\include\GraphicInteractor.hpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Main.cpp”)
+  (编译源文件“src/MotorController.cpp”)
   
   SDKClient.vcxproj -> C:\Users\22261\OneDrive\文档\Project\GloveTracker\Output\x64\Debug\SDKClient_Windows.exe
   已复制         1 个文件。

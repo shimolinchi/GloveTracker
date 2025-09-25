@@ -16,8 +16,8 @@
 
 
 /*
-  GraphThread:
-  - 初始化并运行窗口进程,用于与用户交互，显示手套与电机控制信息，（校正手指极限角度）。
+    GraphThread:
+    初始化并运行窗口进程,用于与用户交互，显示手套与电机控制信息，（校正手指极限角度）。
 */
 void GraphThread(GraphicInteractor* interactor)
 {

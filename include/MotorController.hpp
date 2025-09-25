@@ -14,6 +14,15 @@
 #include "RyHandLib.h"
 #include "math_utils.hpp"
 
+
+enum class CalibrateProcess {
+    START,
+    STEP1,
+    SWITCH,
+    STEP2,
+    FINISH
+};
+
 class MotorController {
 public:
     SDKClient* client;
@@ -24,6 +33,8 @@ public:
     std::vector<int> current_drive;      // [指令] 电机电流
     std::vector<int> velocity_now; // [反馈] 当前电机速度
     std::vector<int> current_now;  // [反馈] 当前电机电流
+    CalibrateProcess calibrating_process;
+    ErgonomicsData& glove_data;
     MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client);
     void Run();
 
@@ -33,32 +44,36 @@ private:
     TPCANHandle PcanHandle;
 
     // --- 静态常量定义 (极限值) ---
-    static const std::vector<float> thumb_ip_limit;
-    static const std::vector<float> dip_limit;
-    static const std::vector<float> pip_limit;
-    static const std::vector<std::vector<float>> mcp_stretch_limit;
-    static const std::vector<float> thumb_mcp_limit;
-    static const std::vector<float> thumb_cmc_stretch_limit;
-    static const std::vector<float> thumb_cmc_spread_limit;
-    static const std::vector<float> index_mcp_spread_limit;
-    static const std::vector<float> middle_mcp_spread_limit;
-    static const std::vector<float> ring_mcp_spread_limit;
-    static const std::vector<float> pinky_mcp_spread_limit;
+    static std::vector<float> thumb_ip_limit;
+    static std::vector<float> dip_limit;
+    static std::vector<float> pip_limit;
+    static std::vector<std::vector<float>> mcp_stretch_limit;
+    static std::vector<float> thumb_mcp_limit;
+    static std::vector<float> thumb_cmc_stretch_limit;
+    static std::vector<float> thumb_cmc_spread_limit;
+
+    std::vector<float> mcp_spread_zero_position;
+    std::vector<int> base_data_index = {};
+    std::vector<int> base_pos_index = {};
+    std::vector<float> spread_limit = {};
+    std::vector<float> spread_coeff_neg = {};
+    std::vector<float> spread_coeff_pos = {};
 
     // --- 新增的配置结构体和静态配置表 ---
     struct FingerConfig {
         int base_data_index; // ErgonomicsData中的起始索引
         int base_pos_index;  // position_norm中的起始索引
-        const std::vector<float>& spread_limit; // 侧摆极限值的引用
+        float spread_limit; // 侧摆极限值的引用
         float spread_coeff_neg; // 侧摆为负时的系数，neg为negetive
         float spread_coeff_pos; // 侧摆为正时的系数，pos为positive，不是position
     };
-    static const std::vector<FingerConfig> s_fingerConfigs;
+    // std::vector<FingerConfig> s_fingerConfigs;
 
 
     // --- 私有辅助函数 ---
-    void ProcessThumb(const ErgonomicsData& data);
-    void ProcessFinger(const ErgonomicsData& data, const FingerConfig& config);
+    void Calibrate();
+    void ProcessThumb();
+    void ProcessFinger(int finger_index);  //0~3 分别为食指~小拇指
     void MotorControl();
 
     void UpdateMotorData();
