@@ -13,6 +13,7 @@
 # include "math_utils.hpp"
 # include "MotorController.hpp"
 # include "GraphicInteractor.hpp"
+# include "Recorder.hpp"
 
 
 /*
@@ -53,6 +54,11 @@ void CtrlThread(MotorController* controller)
 {
     controller->Run();
 }
+
+void RecorderThread(Recorder* recorder) {
+    recorder->Run();
+}
+
 int main(int argc, char* argv[])
 {
     // SDK客户端初始化
@@ -64,13 +70,15 @@ int main(int argc, char* argv[])
     TPCANStatus result = pcan.Initialize(PcanHandle, baudrate);
     // 电机控制器初始化
     MotorController controller(&pcan, PcanHandle, &sdk_client);
+    Recorder recorder(&controller);
     // 图形界面初始化
-    GraphicInteractor interactor(&controller);
+    GraphicInteractor interactor(&controller, &recorder);
     
     // 线程启动
     std::thread sdkclient_thread(SDKThread, &sdk_client);
     std::thread controller_thread(CtrlThread, &controller);
     std::thread interactor_thread(GraphThread, &interactor);
+    std::thread recorder_thread(RecorderThread, &recorder);
 
     sdkclient_thread.join();
     interactor_thread.detach();

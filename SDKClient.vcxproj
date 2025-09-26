@@ -123,6 +123,7 @@
     <ClInclude Include="include/MotorController.hpp" />
     <ClInclude Include="include/math_utils.hpp" />
     <ClInclude Include="include/GraphicInteractor.hpp" />
+    <ClInclude Include="include/Recorder.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/PCANBasic.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="src/MotorController.cpp" />
     <ClCompile Include="src/math_utils.cpp" />
     <ClCompile Include="src/GraphicInteractor.cpp" />
+    <ClCompile Include="src/Recorder.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

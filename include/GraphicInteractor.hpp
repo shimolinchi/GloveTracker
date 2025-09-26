@@ -7,6 +7,7 @@
 # include <vector>
 # include "SDKClient.hpp"
 # include "MotorController.hpp"
+# include "Recorder.hpp"
 #pragma execution_character_set("utf-8")
 
 enum class PanelState {
@@ -14,6 +15,7 @@ enum class PanelState {
     GLOVE_DATA,
     MOTOR_DATA,
     CALIBRATE,
+    RECORDING,
     EXIT
 };
 
@@ -24,6 +26,7 @@ private:
     bool running = true;  // 控制循环是否继续
     bool paused = false;  // 是否暂停显示
     MotorController* controller;
+    Recorder* recorder;
 
     ErgonomicsData left_hand_data;// 左手
     ErgonomicsData right_hand_data;// 右手
@@ -35,7 +38,7 @@ private:
     PanelState state;
 
 public:
-    GraphicInteractor( MotorController* controller);
+    GraphicInteractor( MotorController* controller, Recorder* recorder);
     ~GraphicInteractor();
     ClientReturnCode DisplayingDataGlove(int start_y);
     void DisplayingDataMotor(int start_y);
@@ -45,6 +48,9 @@ public:
     void PrintSpecificData(const T& data, int start_y, int start_x = 50);
     void UpdateData();
     void StartCalibrate();
+    void RecordOnce();
+    void Recording();
+    int InputNumber();
     void Init();
     void Run();
 };

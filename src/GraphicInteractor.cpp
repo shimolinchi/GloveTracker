@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iomanip>
 
-GraphicInteractor::GraphicInteractor(MotorController* controller): running(true), paused(false) ,controller(controller)
+GraphicInteractor::GraphicInteractor(MotorController* controller, Recorder* recorder): running(true), paused(false) ,controller(controller), recorder(recorder)
 {
     
 }
@@ -272,6 +272,244 @@ void GraphicInteractor::PrintSpecificData(const T& data, int start_y, int start_
     outtextxy(start_x, start_y, text.c_str());
 }
 
+void GraphicInteractor::RecordOnce() {
+    std::wstring msg = recorder->RecordPosOnce();  // 获取提示信息
+    int winW = getwidth();
+    int winH = getheight();
+
+    BeginBatchDraw(); 
+    while (true) {
+        cleardevice();
+
+        // 显示提示信息
+        settextstyle(26, 0, _T("Consolas"));
+        settextcolor(WHITE);
+        outtextxy(50, winH - 100, msg.c_str());
+        outtextxy(50, winH - 60, _T("Right click to return...")); 
+
+        FlushBatchDraw();
+
+        // 检测鼠标右键
+        if (MouseHit()) {
+            MOUSEMSG msgMouse = GetMouseMsg();
+            if (msgMouse.uMsg == WM_RBUTTONDOWN) {
+                state = PanelState::MAIN_MENU;
+                EndBatchDraw(); 
+                return;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+int GraphicInteractor::InputNumber() {
+    std::wstring inputStr;
+    settextstyle(26, 0, L"Consolas");
+    settextcolor(WHITE);
+
+    ExMessage msg;
+    bool cursorVisible = true;
+    bool inputActive = true;  // 输入框激活状态
+    auto lastBlink = std::chrono::steady_clock::now();
+
+    int boxX = 50, boxY = 150;
+    int boxW = 400, boxH = 40;
+
+    while (true) {
+        // 取所有消息（-1 表示不过滤）
+        while (peekmessage(&msg, -1, true)) {
+            switch (msg.message) {
+            case WM_LBUTTONDOWN:
+                // 鼠标点击，检查是否点到输入框
+                if (msg.x >= boxX && msg.x <= boxX + boxW &&
+                    msg.y >= boxY && msg.y <= boxY + boxH) {
+                    inputActive = true;
+                } else {
+                    inputActive = false;
+                }
+                break;
+
+            case WM_KEYDOWN:  // 功能键
+                if (!inputActive) break;
+
+                switch (msg.vkcode) {
+                case VK_RETURN:  // Enter 键
+                    if (!inputStr.empty()) {
+                        try {
+                            return std::stoi(inputStr); // 返回输入的数字
+                        } catch (...) {
+                            inputStr.clear(); // 输入非法时清空
+                        }
+                    }
+                    break;
+
+                case VK_BACK:  // 退格键
+                    if (!inputStr.empty()) {
+                        inputStr.pop_back();
+                    }
+                    break;
+
+                case VK_ESCAPE:  // ESC 退出
+                    return -1;
+                }
+                break;
+
+            case WM_CHAR:  // 输入字符
+                if (inputActive) {
+                    if (msg.ch >= L'0' && msg.ch <= L'9') {
+                        inputStr += static_cast<wchar_t>(msg.ch);
+                    }
+                }
+                break;
+            }
+        }
+        // 绘制界面
+        cleardevice();
+
+        outtextxy(50, 100, L"Input new frequency (Hz), press Enter to confirm");
+
+        if (inputActive) {
+            setlinecolor(YELLOW);
+        } else {
+            setlinecolor(WHITE);
+        }
+
+        // 绘制输入框
+        setfillcolor(0x222222);
+        fillrectangle(boxX, boxY, boxX + boxW, boxY + boxH);
+        rectangle(boxX, boxY, boxX + boxW, boxY + boxH);
+
+        // 显示输入内容
+        settextcolor(WHITE);
+        if (!inputStr.empty()) {
+            outtextxy(boxX + 10, boxY + 8, inputStr.c_str());
+        } else if (inputActive) {
+            settextcolor(0x888888);
+            outtextxy(boxX + 10, boxY + 8, L"Click here and input number...");
+            settextcolor(WHITE);
+        }
+
+        // 光标闪烁
+        if (inputActive) {
+            int textW = textwidth(inputStr.c_str());
+            int cursorX = boxX + 10 + textW;
+            int cursorY1 = boxY + 5;
+            int cursorY2 = boxY + boxH - 5;
+
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastBlink).count() > 500) {
+                cursorVisible = !cursorVisible;
+                lastBlink = now;
+            }
+
+            if (cursorVisible) {
+                line(cursorX, cursorY1, cursorX, cursorY2);
+            }
+        }
+
+        if (!inputActive) {
+            settextcolor(0xFFFF00);
+            outtextxy(boxX, boxY + boxH + 10, L"Click on the input box to activate");
+            settextcolor(WHITE);
+        }
+
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    return -1;
+}
+
+
+
+void GraphicInteractor::Recording() {
+
+    settextcolor(WHITE);   
+    int winW  = getwidth();           
+    int winH  = getheight();
+    settextstyle(32, 0, _T("Consolas"));
+
+    LPCTSTR title = _T("Recording Options");
+    int titleW = textwidth(title);
+    int startY = 180;
+    int spacing   = 70;
+    int btnWidth  = 300;
+    int btnHeight = 50;
+    int btnX1 = (winW - btnWidth) / 2;
+    int btnX2 = btnX1 + btnWidth;
+    int x = (winW - titleW) / 2;
+
+    while (true) {
+        cleardevice();
+        outtextxy(x, 50, title);
+        std::string file_info = "Current file: " + recorder->GetFileName();
+        std::string freq_info = "Current frequency: " + std::to_string(recorder->GetFrequency()); 
+        std::wstring w_file_info(file_info.begin(), file_info.end());
+        std::wstring w_freq_info(freq_info.begin(), freq_info.end());
+        outtextxy(50, winH - 120, w_file_info.c_str()); 
+        outtextxy(50, winH - 180, w_freq_info.c_str()); 
+
+        POINT mouse;
+        if (GetCursorPos(&mouse)) {
+            HWND hwnd = GetHWnd();
+            if (hwnd) {
+                ScreenToClient(hwnd, &mouse);
+            }
+        } else {
+            mouse.x = mouse.y = 0;
+        }
+
+        // 按钮 hover 检测
+        bool hoverStartRec  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY && mouse.y <= startY + btnHeight);
+        bool hoverStopRec   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing && mouse.y <= startY + spacing + btnHeight);
+        bool hoverRecOnce   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
+        bool hoverInputFreq = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
+
+        DrawButton(btnX1, startY,               btnX2, startY + btnHeight,           _T("Start Recording"), hoverStartRec);
+        DrawButton(btnX1, startY + spacing,     btnX2, startY + spacing + btnHeight, _T("Stop Recording"),  hoverStopRec);
+        DrawButton(btnX1, startY + spacing*2,   btnX2, startY + spacing*2 + btnHeight,_T("Record once"),     hoverRecOnce);
+        DrawButton(btnX1, startY + spacing*3,   btnX2, startY + spacing*3 + btnHeight,_T("Set Frequency"),   hoverInputFreq);
+
+        if (MouseHit()) {
+            MOUSEMSG msg = GetMouseMsg();
+            if (msg.uMsg == WM_LBUTTONDOWN) {   // 左键触发功能
+                if (hoverRecOnce)       RecordOnce();
+                else if (hoverStartRec) {
+                    recorder->StartRecording();
+                }
+                else if (hoverStopRec)  {
+                    recorder->StopRecording();
+                }
+                else if (hoverInputFreq) {
+                    int freq = InputNumber();
+                    recorder->SetFrequency(freq);
+                    // 更新频率显示
+                    freq_info = "Current frequency: " + std::to_string(freq);
+                    w_freq_info.assign(freq_info.begin(), freq_info.end());
+                }
+            }
+            else if (msg.uMsg == WM_RBUTTONDOWN) {  
+                // 右键退出 Recording 菜单
+                state = PanelState::MAIN_MENU;
+                return;
+            }
+        }
+        if (recorder->recording)outtextxy(50, winH - 250, L"Recording! Stop before exit");
+        else outtextxy(50, winH - 240, L"Not recording");
+
+        std::string position_info = "" ;
+        for (int i = 0; i < 16; i++) {
+            position_info += std::to_string(controller->position_drive[i]);
+            if (i != 15) position_info += ",";
+        }
+        std::wstring w_position_info(position_info.begin(), position_info.end());
+        outtextxy(50, winH - 310, L"Current position:");
+        outtextxy(50, winH - 280, w_position_info.c_str());
+
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
 void GraphicInteractor::Run() {
     BeginBatchDraw();  // 开启双缓冲
     int winW  = getwidth();
@@ -311,13 +549,15 @@ void GraphicInteractor::Run() {
             bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY && mouse.y <= startY + btnHeight);
             bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing && mouse.y <= startY + spacing + btnHeight);
             bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
-            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
+            bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
+            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*4 && mouse.y <= startY + spacing*4 + btnHeight);
 
             // 绘制按钮（居中）
             DrawButton(btnX1, startY,                 btnX2, startY + btnHeight,         _T("Check Glove Data"), hoverGlove);
             DrawButton(btnX1, startY + spacing,       btnX2, startY + spacing + btnHeight,_T("Check Motor Data"), hoverMotor);
             DrawButton(btnX1, startY + spacing*2,    btnX2, startY + spacing*2 + btnHeight,_T("Calibrate"), hoverCalibrate);
-            DrawButton(btnX1, startY + spacing*3,    btnX2, startY + spacing*3 + btnHeight,_T("Exit Program"), hoverExit);
+            DrawButton(btnX1, startY + spacing*3,    btnX2, startY + spacing*3 + btnHeight,_T("Recording"), hoverRecording);
+            DrawButton(btnX1, startY + spacing*4,    btnX2, startY + spacing*4 + btnHeight,_T("Exit Program"), hoverExit);
 
             // 鼠标点击检测
             if (MouseHit()) {
@@ -327,6 +567,7 @@ void GraphicInteractor::Run() {
                     if (hoverGlove) state = PanelState::GLOVE_DATA;
                     else if (hoverMotor) state = PanelState::MOTOR_DATA;
                     else if (hoverCalibrate)  state = PanelState::CALIBRATE;
+                    else if (hoverRecording) state = PanelState::RECORDING;
                     else if (hoverExit)  state = PanelState::EXIT;
                 }
             }
@@ -357,6 +598,9 @@ void GraphicInteractor::Run() {
         else if (state == PanelState::CALIBRATE) {
             StartCalibrate();
             state = PanelState::MAIN_MENU;
+        }
+        else if (state == PanelState::RECORDING) {
+            Recording();
         }
         // ===== 退出程序 =====
         else if (state == PanelState::EXIT) {
