@@ -8,8 +8,8 @@ std::vector<float> MotorController::dip_limit = { 0.0f, 65.0f };
 std::vector<float> MotorController::pip_limit = { 0.0f, 100.0f };
 std::vector<std::vector<float>> MotorController::mcp_stretch_limit = { {0.0f, 75.0f}, {0.0f, 90.0f}, {0.0f, 75.0f}, {0.0f, 80.0f} };
 std::vector<float> MotorController::thumb_mcp_limit = { 0.0f, 70.0f };
-std::vector<float> MotorController::thumb_cmc_stretch_limit = { 54.0f, 30.0f };
-std::vector<float> MotorController::thumb_cmc_spread_limit = { 8.0f, 54.0f };
+std::vector<float> MotorController::thumb_cmc_stretch_limit = { 48.0f, 32.0f };
+std::vector<float> MotorController::thumb_cmc_spread_limit = { 18.0f, 58.0f };
 
 // --- 初始化手指配置表 ---
 
@@ -36,7 +36,7 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
     }
 
 /**
- * @brief 处理大拇指的映射逻辑 (特殊情况)
+ * @brief 处理大拇指的映射逻辑
  */
 void MotorController::ProcessThumb() {
     
@@ -49,28 +49,40 @@ void MotorController::ProcessThumb() {
     position_norm[15] = std::clamp(0.3f * cmc_stretch_norm + 0.7f * cmc_spread_norm, 0.0f, 1.0f);
     float conpensate = LinearMap(cmc_spread_norm, 0.0f, 0.6f, 0.889f, 0.0f);
 
-    std::vector<float> mcp_limit_r = {thumb_cmc_stretch_limit[0] - 31.0f * (position_norm[15]), thumb_cmc_stretch_limit[1] - 31.0f * (position_norm[15])};
+    std::vector<float> mcp_limit_r = {thumb_cmc_stretch_limit[0] - 27.0f * (position_norm[15] * position_norm[15] * position_norm[15]), thumb_cmc_stretch_limit[1] - 30.0f * (position_norm[15] * position_norm[15] * position_norm[15])};
     float cmc_stretch_norm_r = LinearMap(glove_data.data[1], mcp_limit_r[0], mcp_limit_r[1], 0.0f, 1.0f);
 
     position_norm[0] = std::clamp((cmc_stretch_norm_r), 0.0f, 1.0f);
     position_norm[1] = std::clamp((cmc_stretch_norm_r), 0.0f, 1.0f);
+    // float theta = 60.0f * 3.1416f / 180.0f;
+    // std::vector<std::vector<float>> R = {{cos(theta), -sin(theta), 0.36f},
+    //                                      {sin(theta),  cos(theta), 0.0f },
+    //                                      {0.0f      ,  0.0f      , 1.0f }};
+    // std::vector<std::vector<float>> old_ord = {{cmc_spread_norm}, {cmc_stretch_norm}, {1.0f}};
+    // std::vector<std::vector<float>> new_ord = matrixMultiply(R, old_ord);
+    // position_norm[15] = new_ord[0][0];
+    // position_norm[0] = position_norm[1] = new_ord[1][0];
+    // position_norm[15] = 0.551f;
 }
 
 /**
  * @brief 通用处理函数，用于食指、中指、无名指和小指
  */
 void MotorController::ProcessFinger(int finger_index) {
+
+    float pip_norm        = LinearMap(glove_data.data[base_data_index[finger_index] + 2], pip_limit[0], pip_limit[1], 0.0f, 1.0f);
+    float dip_norm        = LinearMap(glove_data.data[base_data_index[finger_index] + 3], dip_limit[0], dip_limit[1], 0.0f, 1.0f);
+    position_norm[base_pos_index[finger_index] + 2] = std::clamp(0.5f * pip_norm + 0.5f * dip_norm, 0.0f, 1.0f);
+    std::vector<float> mcp_conpensate = {30.0f, 35.0f, 30.0f, 20.0f};
+
+
     float mcp_spread_norm = LinearMap(glove_data.data[base_data_index[finger_index]],  mcp_spread_zero_position[finger_index] + spread_limit[finger_index], mcp_spread_zero_position[finger_index] - spread_limit[finger_index], -1.0f, 1.0f);
-    float mcp_stretch_norm = LinearMap(glove_data.data[base_data_index[finger_index] + 1], mcp_stretch_limit[finger_index][0], mcp_stretch_limit[finger_index][1], 0.0f, 1.0f);
+    float mcp_stretch_norm = LinearMap(glove_data.data[base_data_index[finger_index] + 1], mcp_stretch_limit[finger_index][0] + mcp_conpensate[finger_index] * position_norm[base_pos_index[finger_index] + 2], mcp_stretch_limit[finger_index][1], 0.0f, 1.0f);
 
     // 一定程度上抑制当mcp弯曲较大时（趋近握拳）的mcp侧摆角。
     mcp_spread_norm = copysign(std::max(0.0f, std::abs(mcp_spread_norm) - 0.8f * mcp_stretch_norm), mcp_spread_norm);
     // mcp_spread_norm = copysign(std::max(0.0f, std::abs(mcp_spread_norm) - 0.6f * mcp_stretch_norm), mcp_spread_norm);
 
-    float pip_norm        = LinearMap(glove_data.data[base_data_index[finger_index] + 2], pip_limit[0], pip_limit[1], 0.0f, 1.0f);
-    float dip_norm        = LinearMap(glove_data.data[base_data_index[finger_index] + 3], dip_limit[0], dip_limit[1], 0.0f, 1.0f);
-
-    position_norm[base_pos_index[finger_index] + 2] = std::clamp(0.5f * pip_norm + 0.5f * dip_norm, 0.0f, 1.0f);
 
     position_norm[base_pos_index[finger_index] + 1] = (mcp_spread_norm < 0)
         ? std::clamp(mcp_stretch_norm - spread_coeff_neg[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
@@ -79,6 +91,8 @@ void MotorController::ProcessFinger(int finger_index) {
     position_norm[base_pos_index[finger_index]] = (mcp_spread_norm > 0)
         ? std::clamp(mcp_stretch_norm + spread_coeff_pos[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
         : std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+
+    
 }
 
 void MotorController::Calibrate() {

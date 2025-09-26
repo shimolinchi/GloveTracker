@@ -8,6 +8,7 @@
 # include "SDKClient.hpp"
 # include "MotorController.hpp"
 # include "Recorder.hpp"
+# include <math.h>
 #pragma execution_character_set("utf-8")
 
 enum class PanelState {

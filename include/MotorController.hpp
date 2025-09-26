@@ -1,18 +1,17 @@
-#pragma once
-#include <iostream>
-#include <vector>
-#include <cstdint>
-#include <chrono>
-#include <thread>
-#include <stdexcept>
-#include <iomanip>
-#include <optional>
-#include <cmath>
-#include <algorithm>
-#include "SDKClient.hpp"
-#include "PCANBasic.hpp"
-#include "RyHandLib.h"
-#include "math_utils.hpp"
+# pragma once
+# include <iostream>
+# include <vector>
+# include <cstdint>
+# include <chrono>
+# include <thread>
+# include <stdexcept>
+# include <iomanip>
+# include <optional>
+# include <algorithm>
+# include "SDKClient.hpp"
+# include "PCANBasic.hpp"
+# include "RyHandLib.h"
+# include "math_utils.hpp"
 
 
 enum class CalibrateProcess {

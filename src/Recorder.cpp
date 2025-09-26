@@ -51,7 +51,8 @@ std::wstring Recorder::RecordPosOnce() {
         oss << controller->position_drive[i];
         if (i < 15) oss << " ";  // 用空格分隔
     }
-
+    file.flush();
+    file.close();
     return s2ws(oss.str());
 }
 

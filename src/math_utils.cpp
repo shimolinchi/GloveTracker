@@ -27,3 +27,20 @@ int sgn(T val) {
 template int sgn<int>(int);
 template int sgn<float>(float);
 template int sgn<double>(double);
+
+
+// 矩阵乘法
+std::vector<std::vector<float>> matrixMultiply(const std::vector<std::vector<float>>& A, const std::vector<std::vector<float>>& B) {
+    int rowsA = A.size();
+    int colsA = A[0].size();
+    int colsB = B[0].size();
+    std::vector<std::vector<float>> C(rowsA, std::vector<float>(colsB, 0));
+    for (int i = 0; i < rowsA; i++) {
+        for (int j = 0; j < colsB; j++) {
+            for (int k = 0; k < colsA; k++) {
+                C[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    return C;
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <stdexcept>
+# include <vector>
 
 /**
  * @brief 线性映射函数，将数值从初始区间映射到目标区间
@@ -18,3 +19,5 @@ float LinearMap(float value, float from_min, float from_max, float to_min, float
 
 template <typename T>
 int sgn(T val);
+
+std::vector<std::vector<float>> matrixMultiply(const std::vector<std::vector<float>>& A, const std::vector<std::vector<float>>& B);
