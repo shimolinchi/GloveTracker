@@ -109,13 +109,13 @@ void GraphicInteractor::DisplayingDataMotor(int start_y) {
         const std::wstring FingerMotorNames[3] = { L"mcp1", L"mcp2", L"dpip" };
         int y = start_y;
         int t_DataOffset = 0;
+        auto fmt = [](int val) {
+            std::wostringstream oss;
+            oss << val; // 直接输出整数，不带小数
+            return oss.str();
+        };
         for (unsigned int t_FingerNumber = 0; t_FingerNumber < 5; t_FingerNumber++)
         {
-            auto fmt = [](int val) {
-                std::wostringstream oss;
-                oss << val; // 直接输出整数，不带小数
-                return oss.str();
-            };
 
             std::wstring line =
                 FingerNames[t_FingerNumber] + L" " +
@@ -128,6 +128,9 @@ void GraphicInteractor::DisplayingDataMotor(int start_y) {
 
             t_DataOffset += 3;
         }
+        std::wstring line = L"[wrist] " + fmt(data[15]);
+        outtextxy(50, y, line.c_str());
+        y += 20;
         return y;
     };
 

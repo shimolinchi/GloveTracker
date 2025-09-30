@@ -44,8 +44,8 @@ private:
 
     // --- 静态常量定义 (极限值) ---
     static std::vector<float> thumb_ip_limit;
-    static std::vector<float> dip_limit;
-    static std::vector<float> pip_limit;
+    static std::vector<std::vector<float>> dip_limit;
+    static std::vector<std::vector<float>> pip_limit;
     static std::vector<std::vector<float>> mcp_stretch_limit;
     static std::vector<float> thumb_mcp_limit;
     static std::vector<float> thumb_cmc_stretch_limit;
