@@ -188,7 +188,7 @@ void GraphicInteractor::StartCalibrate(){
     int winW  = getwidth();
     controller->calibrating_process = CalibrateProcess::START;
 
-    // ---------- 第一段：3 秒 ----------
+    // ---------- 第一段：2 秒 ----------
     auto start1 = std::chrono::steady_clock::now();
     while(controller->calibrating_process == CalibrateProcess::START){
         cleardevice();
@@ -200,7 +200,7 @@ void GraphicInteractor::StartCalibrate(){
             break;
         }
         TCHAR buf[256];
-        _stprintf_s(buf,_T("Start calibrate in %d seconds, please put your hand flat on the table"),remain);
+        _stprintf_s(buf,_T("Start calibrate in %d seconds, put your hand flat on the table"),remain);
         int textW = textwidth(buf);
         int x = (winW - textW) / 2;
         outtextxy(x, 50, buf);
@@ -208,7 +208,7 @@ void GraphicInteractor::StartCalibrate(){
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-    // ---------- 第二段：5 秒 ----------
+    // ---------- 第二段：2 秒 ----------
     auto start2 = std::chrono::steady_clock::now();
     while(controller->calibrating_process == CalibrateProcess::STEP1){
         cleardevice();

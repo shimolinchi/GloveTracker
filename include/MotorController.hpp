@@ -8,6 +8,7 @@
 # include <iomanip>
 # include <optional>
 # include <algorithm>
+# include <numeric>
 # include "SDKClient.hpp"
 # include "PCANBasic.hpp"
 # include "RyHandLib.h"
@@ -34,6 +35,8 @@ public:
     std::vector<int> current_now;  // [反馈] 当前电机电流
     CalibrateProcess calibrating_process;
     ErgonomicsData& glove_data;
+    ClientSkeleton skeleton;
+
     MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client);
     void Run();
 
@@ -58,6 +61,13 @@ private:
     std::vector<float> spread_coeff_neg = {};
     std::vector<float> spread_coeff_pos = {};
 
+	float pointing_threadhold = 0.08f; // 对指时的阈值,对应指尖的距离
+	float pointing_optimization_strength = 0.017f; // 对指时的优化强度
+    std::vector<float> tip_distances; // 四根手指指尖分别与大拇指指尖的距离,单位（米）
+    
+    std::vector<std::vector<float>> pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
+    std::vector<std::vector<float>> pointing_motor_position_norm;  // 对指时电机位置数据,为上变量归一化结果
+
     // --- 新增的配置结构体和静态配置表 ---
     struct FingerConfig {
         int base_data_index; // ErgonomicsData中的起始索引
@@ -74,6 +84,8 @@ private:
     void ProcessThumb();
     void ProcessFinger(int finger_index);  //0~3 分别为食指~小拇指
     void MotorControl();
+    void PointingOptimize();
 
     void UpdateMotorData();
+    void UpdateTipDistance();
 };

@@ -11,8 +11,21 @@ std::vector<float> MotorController::thumb_mcp_limit = { 0.0f, 70.0f };
 std::vector<float> MotorController::thumb_cmc_stretch_limit = { 48.0f, 32.0f };
 std::vector<float> MotorController::thumb_cmc_spread_limit = { 18.0f, 58.0f };
 
-// --- 初始化手指配置表 ---
-
+void MotorController::UpdateTipDistance() {
+    if (client->GetCurrentSkeleton()) {
+        skeleton = client->GetCurrentSkeleton()->skeletons[0];
+        ManusTransform thumb_tf  = skeleton.nodes[4].transform;
+        ManusTransform index_tf  = skeleton.nodes[8].transform;
+        ManusTransform middle_tf = skeleton.nodes[12].transform;
+        ManusTransform ring_tf   = skeleton.nodes[16].transform;
+        ManusTransform pinky_tf  = skeleton.nodes[20].transform;
+        tip_distances[0] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, index_tf.position.x, index_tf.position.y, index_tf.position.z);
+        tip_distances[1] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, middle_tf.position.x, middle_tf.position.y, middle_tf.position.z);
+        tip_distances[2] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, ring_tf.position.x, ring_tf.position.y, ring_tf.position.z);
+        tip_distances[3] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, pinky_tf.position.x, pinky_tf.position.y, pinky_tf.position.z);
+        std::cout << "Distance " << tip_distances[0] << "," << tip_distances[1] << "," << tip_distances[2] << "," << tip_distances[3] << "," << std::endl;
+    }
+}
 
 MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client) :
     pcan(pcan),
@@ -31,7 +44,12 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
     base_pos_index  ({3, 6, 9, 12}),
     spread_limit    ({18.0f, 15.0f, 15.0f, 18.0f}),
     spread_coeff_neg({0.4f, 0.4f, 0.4f, 0.4f}),
-    spread_coeff_pos({0.4f, 0.4f, 0.4f, 0.5f})
+    spread_coeff_pos({0.4f, 0.4f, 0.4f, 0.5f}),
+	tip_distances(4, 100.0f),
+    pointing_motor_position({{ 2091, 1477, 2965, 1248, 1248, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2546 },
+                            { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2224, 0, 0, 0, 0, 0, 0, 3145 },
+                            { 2303, 2369, 2526, 0, 0, 0, 0, 0, 0, 1161, 1161, 2062, 0, 0, 0, 3910 },
+                            { 1245, 2185, 2462, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
     {
     }
 
@@ -79,14 +97,41 @@ void MotorController::ProcessFinger(int finger_index) {
     mcp_spread_norm = copysign(std::max(0.0f, std::abs(mcp_spread_norm) - 0.8f * mcp_stretch_norm), mcp_spread_norm);
 
     position_norm[base_pos_index[finger_index] + 1] = (mcp_spread_norm < 0)
-        ? std::clamp(mcp_stretch_norm - spread_coeff_neg[finger_index] * mcp_spread_norm * abs(mcp_spread_norm) * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
+        ? std::clamp(mcp_stretch_norm - spread_coeff_neg[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
         : std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
 
     position_norm[base_pos_index[finger_index]] = (mcp_spread_norm > 0)
-        ? std::clamp(mcp_stretch_norm + spread_coeff_pos[finger_index] * mcp_spread_norm * abs(mcp_spread_norm) * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
+        ? std::clamp(mcp_stretch_norm + spread_coeff_pos[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
         : std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+}
 
-    
+void MotorController::PointingOptimize() {
+
+    std::vector<float> pointing_motor_position_norm(16);
+    int closest_tip_index = std::distance(tip_distances.begin(),std::min_element(tip_distances.begin(), tip_distances.end()));
+    float closest_tip_distance = tip_distances[closest_tip_index];
+	std::cout << "Closest tip index: " << closest_tip_index << std::endl;
+
+    for (size_t i = 0; i < 16; i++) {
+        pointing_motor_position_norm[i] = pointing_motor_position[closest_tip_index][i] / 4096.0f;
+	}
+
+    if (tip_distances[closest_tip_index] < 1e-6) {
+        for (int i = 0; i < 16; i++) {
+            if (pointing_motor_position_norm[i] > 1e-6) { // 只优化和对指相关的电机
+                position_norm[i] = pointing_motor_position_norm[i];
+            }
+        }
+    }
+    else if (tip_distances[closest_tip_index] < pointing_threadhold) {
+        for (int i = 0; i < 16; i++) {
+            if (pointing_motor_position_norm[i] > 1e-6) { // 只优化和对指相关的电机
+                position_norm[i] += std::clamp(pointing_optimization_strength * (pointing_motor_position_norm[i] - position_norm[i]) / tip_distances[closest_tip_index],
+                    pointing_motor_position_norm[i] - position_norm[i] > 0 ? 0.0f : pointing_motor_position_norm[i] - position_norm[i],
+                    pointing_motor_position_norm[i] - position_norm[i] > 0 ? pointing_motor_position_norm[i] - position_norm[i] : 0.0f);
+            }
+        }
+	}
 }
 
 /**
@@ -95,7 +140,7 @@ void MotorController::ProcessFinger(int finger_index) {
 void MotorController::Calibrate() {
 
     int sampleCount = 0;
-    std::vector<float> sum = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 前四个用于四指侧摆零点，第四到八个用于dip零点，第九到十二个用于dip零点， 第十三个个用于大拇指侧摆零点
+    std::vector<float> sum = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 前四个用于四指侧摆零点，第四到八个用于pip零点，第九到十二个用于dip零点， 第十三个个用于大拇指侧摆零点
     while(calibrating_process != CalibrateProcess::STEP1) {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
     while (calibrating_process == CalibrateProcess::STEP1) {
         for(int i = 0; i < 4; i++){
@@ -114,7 +159,6 @@ void MotorController::Calibrate() {
         dip_limit[i][0] = sum[i + 4] / sampleCount + 2.0f;
     }
     thumb_cmc_spread_limit[0] = sum[12] / sampleCount;
-
 }
 
 
@@ -122,7 +166,11 @@ void MotorController::Calibrate() {
  * @brief 主循环函数
  */
 void MotorController::Run() {
-    
+
+    // 等待手套sdk初始化结束后，加载骨骼模型
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    client->LoadSkeleton(Side_Left);
+
     while (true) {
         ErgonomicsData leftData = client->GetGloveErgoData(true); // true = 左手
         glove_data = client->GetGloveErgoData(true);
@@ -130,23 +178,25 @@ void MotorController::Run() {
             Calibrate();
         }
 
-        // 1. 单独处理大拇指
+		// 更新指尖距离数据
+        UpdateTipDistance();
+
+        // 单独处理大拇指
         ProcessThumb();
 
-        // 2. 循环处理其余四个手指
-        for (int i = 0; i < 4; i++) {
-            ProcessFinger(i);
-        }
+        // 循环处理其余四个手指
+        for (int i=0; i<4; i++) { ProcessFinger(i); }
 
-        // 3. 将归一化位置转换为电机驱动值
-        for (int i = 0; i < 16; ++i) {
-            position_drive[i] = static_cast<int>(position_norm[i] * 4096.0f);
-        }
+        //进行对指优化
+        PointingOptimize();
+
+        // 将归一化位置转换为电机驱动值
+        for (int i=0; i<16; ++i) { position_drive[i] = static_cast<int>(position_norm[i] * 4096.0f); }
         
-        // 4. 更新电机读取数据
+        // 更新电机读取数据
         UpdateMotorData();
 
-        // 5. 发送最终指令
+        // 发送控制指令
         MotorControl();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

@@ -3873,3 +3873,16 @@ ErgonomicsData SDKClient::GetGloveErgoData(bool is_left)
 		return m_RightGloveErgoData;
 	}
 }
+
+ClientSkeletonCollection* SDKClient::GetCurrentSkeleton() {
+	std::lock_guard<std::mutex> lock(m_SkeletonMutex);
+	return m_NextSkeleton;
+}
+
+void SDKClient::LoadSkeleton(Side p_side) {
+	LoadTestSkeleton(p_side);
+}
+
+void SDKClient::UnloadSkeleton() {
+	UnloadTestSkeleton();
+}

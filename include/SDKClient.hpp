@@ -155,6 +155,11 @@ public:
 	float RoundFloatValue(float p_Value, int p_NumDecimalsToKeep);
 	void AdvanceConsolePosition(short int p_Y);
 
+
+
+
+
+
 protected:
 	virtual ClientReturnCode InitializeSDK();
 	virtual ClientReturnCode RestartSDK();
@@ -367,6 +372,9 @@ protected:
 
 public:
 	ErgonomicsData GetGloveErgoData(bool is_left);
+	ClientSkeletonCollection* GetCurrentSkeleton();
+	void LoadSkeleton(Side p_Side);
+	void UnloadSkeleton();
 };
 
 #endif

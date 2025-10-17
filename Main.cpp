@@ -55,6 +55,10 @@ void CtrlThread(MotorController* controller)
     controller->Run();
 }
 
+/*
+    RecorderThread:
+    运行数据记录线程，将手套数据和电机控制数据记录到文件中。
+*/
 void RecorderThread(Recorder* recorder) {
     recorder->Run();
 }
@@ -70,6 +74,7 @@ int main(int argc, char* argv[])
     TPCANStatus result = pcan.Initialize(PcanHandle, baudrate);
     // 电机控制器初始化
     MotorController controller(&pcan, PcanHandle, &sdk_client);
+    // 数据记录器初始化
     Recorder recorder(&controller);
     // 图形界面初始化
     GraphicInteractor interactor(&controller, &recorder);
@@ -80,8 +85,13 @@ int main(int argc, char* argv[])
     std::thread interactor_thread(GraphThread, &interactor);
     std::thread recorder_thread(RecorderThread, &recorder);
 
+    //std::thread test_thread(testThread, &sdk_client);
+    //test_thread.detach();
+    // 将手套客户端线程与主线程绑定，其他线程各自运行
     sdkclient_thread.join();
     interactor_thread.detach();
     controller_thread.detach();
+    recorder_thread.detach();
+    
     return 0;
 }
