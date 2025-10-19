@@ -34,10 +34,12 @@ public:
     std::vector<int> velocity_now; // [反馈] 当前电机速度
     std::vector<int> current_now;  // [反馈] 当前电机电流
     CalibrateProcess calibrating_process;
-    ErgonomicsData& glove_data;
+    ErgonomicsData glove_data;
     ClientSkeleton skeleton;
+    bool hand_side;
 
-    MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client);
+    MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client, bool hand_side);
+    void ChangeGloveHandSide();
     void Run();
 
 private:
@@ -62,7 +64,7 @@ private:
     std::vector<float> spread_coeff_pos = {};
 
 	float pointing_threadhold = 0.08f; // 对指时的阈值,对应指尖的距离
-	float pointing_optimization_strength = 0.017f; // 对指时的优化强度
+	float pointing_optimization_strength = 0.013f; // 对指时的优化强度
     std::vector<float> tip_distances; // 四根手指指尖分别与大拇指指尖的距离,单位（米）
     
     std::vector<std::vector<float>> pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
@@ -76,7 +78,6 @@ private:
         float spread_coeff_neg; // 侧摆为负时的系数，neg为negetive
         float spread_coeff_pos; // 侧摆为正时的系数，pos为positive，不是position
     };
-    // std::vector<FingerConfig> s_fingerConfigs;
 
 
     // --- 私有辅助函数 ---

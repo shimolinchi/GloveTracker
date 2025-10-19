@@ -2,14 +2,26 @@
 #include <sstream>
 #include <iomanip>
 
-GraphicInteractor::GraphicInteractor(MotorController* controller, Recorder* recorder): running(true), paused(false) ,controller(controller), recorder(recorder)
+GraphicInteractor::GraphicInteractor(MotorController* controller1, MotorController* controller2, Recorder* recorder): 
+    running(true), 
+    paused(false) ,
+    controller1(controller1), 
+    controller2(controller2), 
+    recorder(recorder),
+	left_position_drive(16, 0),
+	left_position_now(16, 0),
+	left_velocity_drive(16, 0),
+	left_velocity_now(16, 0),
+	right_position_drive(16, 0),
+	right_position_now(16, 0),
+	right_velocity_drive(16, 0),
+	right_velocity_now(16, 0)
 {
-    
 }
 
 void GraphicInteractor::Init() {
-    initgraph(1000, 800);  //宽，高
-    setbkcolor(RGB(46, 46, 56));
+    initgraph(1000, 850);  //宽，高
+    setbkcolor(RGB(30, 30, 30));
     cleardevice();
     settextcolor(WHITE);
     setbkmode(TRANSPARENT);
@@ -19,13 +31,21 @@ void GraphicInteractor::Init() {
 }
 
 void GraphicInteractor::UpdateData() {
-    left_hand_data = controller->client->GetGloveErgoData(true);
-    right_hand_data = controller->client->GetGloveErgoData(false);
+    left_hand_data = controller1->client->GetGloveErgoData(true);
 
-    velocity_now = controller->velocity_now;
-    velocity_drive = controller->velocity_drive;
-    position_now = controller->position_now;
-    position_drive = controller->position_drive;
+    left_velocity_now = controller1->velocity_now;
+    left_velocity_drive = controller1->velocity_drive;
+    left_position_now = controller1->position_now;
+    left_position_drive = controller1->position_drive;
+
+    if (controller2 != nullptr) {
+        right_hand_data = controller2->client->GetGloveErgoData(false);
+
+        right_velocity_now = controller2->velocity_now;
+        right_velocity_drive = controller2->velocity_drive;
+        right_position_now = controller2->position_now;
+        right_position_drive = controller2->position_drive;
+    }
 }
 
 
@@ -46,7 +66,7 @@ ClientReturnCode GraphicInteractor::DisplayingDataGlove(int start_y)
     };
 
     auto PrintHandErgoData = [&](ErgonomicsData& p_ErgoData, bool p_Left, int startX, int startY, int lineHeight) {
-        settextstyle(18, 0, _T("Consolas"));
+        settextstyle(20, 0, _T("Consolas"));
         const std::wstring FingerNames[NUM_FINGERS_ON_HAND] = { L"[thumb] ", L"[index] ", L"[middle]", L"[ring]  ", L"[pinky] " };
         const std::wstring FingerJointNames[3] = { L"mcp", L"pip", L"dip" };
         const std::wstring ThumbJointNames[3] = { L"cmc", L"mcp", L"ip " };
@@ -80,18 +100,19 @@ ClientReturnCode GraphicInteractor::DisplayingDataGlove(int start_y)
 
     // 左手
     {
+        settextstyle(20, 0, _T("Consolas"));
         std::wstring header = L" -- Left Glove -- 0x" + std::to_wstring(left_hand_data.id) + L" - Angles in degrees";
         outtextxy(START_X, y, header.c_str());
-        y += LINE_HEIGHT;
+        y += LINE_HEIGHT + 5;
         y = PrintHandErgoData(left_hand_data, true, START_X, y, LINE_HEIGHT);
     }
 
     // 右手
     {
-        y += LINE_HEIGHT;
+        y += LINE_HEIGHT + 10;
         std::wstring header = L" -- Right Glove -- 0x" + std::to_wstring(right_hand_data.id) + L" - Angles in degrees";
         outtextxy(START_X, y, header.c_str());
-        y += LINE_HEIGHT;
+        y += LINE_HEIGHT + 5;
         y = PrintHandErgoData(right_hand_data, false, START_X, y, LINE_HEIGHT);
     }
 
@@ -100,11 +121,11 @@ ClientReturnCode GraphicInteractor::DisplayingDataGlove(int start_y)
 
 void GraphicInteractor::DisplayingDataMotor(int start_y) {
     
-    settextstyle(18, 0, _T("Consolas"));
+    settextstyle(20, 0, _T("Consolas"));
     int y = start_y;
     int line_space = 20;
 
-    auto DisplayData = [](const std::vector<int>& data, int start_y) {
+    auto DisplayData = [](const std::vector<int>& data, int start_x, int start_y ) {
         const std::wstring FingerNames[NUM_FINGERS_ON_HAND] = { L"[thumb] ", L"[index] ", L"[middle]", L"[ring]  ", L"[pinky] " };
         const std::wstring FingerMotorNames[3] = { L"mcp1", L"mcp2", L"dpip" };
         int y = start_y;
@@ -123,38 +144,58 @@ void GraphicInteractor::DisplayingDataMotor(int start_y) {
                 FingerMotorNames[1] + L" " + fmt(data[t_DataOffset + 1]) + L", " +
                 FingerMotorNames[2] + L" " + fmt(data[t_DataOffset + 2]);
 
-            outtextxy(50, y, line.c_str());
+            outtextxy(start_x, y, line.c_str());
             y += 20;
 
             t_DataOffset += 3;
         }
         std::wstring line = L"[wrist] " + fmt(data[15]);
-        outtextxy(50, y, line.c_str());
+        outtextxy(start_x, y, line.c_str());
         y += 20;
         return y;
     };
 
+	int data_start_y  = y;
+
     outtextxy(50, y, _T("position now"));   y += line_space;
-    y = DisplayData(position_now, y);       y += line_space;
+    y = DisplayData(left_position_now, 50, y);       y += line_space;
     outtextxy(50, y, _T("position drive")); y += line_space;
-    y = DisplayData(position_drive, y);     y += line_space;
+    y = DisplayData(left_position_drive, 50, y);     y += line_space;
     outtextxy(50, y, _T("veloccity now"));  y += line_space;
-    y = DisplayData(velocity_now, y);       y += line_space;
+    y = DisplayData(left_velocity_now, 50, y);       y += line_space;
     outtextxy(50, y, _T("veloccity drive"));y += line_space;
-    y = DisplayData(velocity_drive, y);     y += line_space;
+    y = DisplayData(left_velocity_drive, 50, y);     y += line_space;
+
+	y = data_start_y;
+    outtextxy(550, y, _T("position now"));   y += line_space;
+    y = DisplayData(right_position_now, 550, y);       y += line_space;
+    outtextxy(550, y, _T("position drive")); y += line_space;
+    y = DisplayData(right_position_drive, 550, y);     y += line_space;
+    outtextxy(550, y, _T("veloccity now"));  y += line_space;
+    y = DisplayData(right_velocity_now, 550, y);       y += line_space;
+    outtextxy(550, y, _T("veloccity drive"));y += line_space;
+    y = DisplayData(right_velocity_drive, 550, y);     y += line_space;
 }
 
-// 绘制按钮的函数（带悬停高亮）
 void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, LPCTSTR text, bool hover) {
+    // 圆角半径，可以根据需要调整
+    const int roundRadius = 20;
+
     if (hover) {
         setfillcolor(RGB(57, 127, 155)); // 鼠标悬停时稍微深一点的蓝灰色
-    } else {
-        setfillcolor(RGB(57, 155, 127)); 
     }
-    solidrectangle(left, top, right, bottom);  // 填充矩形
+    else {
+        setfillcolor(RGB(57, 155, 127));
+    }
+    fillroundrect(left, top, right, bottom, roundRadius, roundRadius);  // 填充圆角矩形
 
+    // 设置更粗的边框
+    setlinestyle(PS_SOLID, 2);  // 2像素宽的实线
     setlinecolor(RGB(100, 100, 100));   // 边框颜色
-    rectangle(left, top, right, bottom);
+    roundrect(left, top, right, bottom, roundRadius, roundRadius);      // 绘制圆角边框
+
+    // 恢复默认线宽（1像素），以免影响其他绘图操作
+    setlinestyle(PS_SOLID, 1);
 
     settextcolor(WHITE);   // 文字颜色
     settextstyle(26, 0, _T("Consolas"));
@@ -163,71 +204,146 @@ void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, LPC
     outtextxy(textX, textY, text);
 }
 
-void GraphicInteractor::DrawTitle() {
+void GraphicInteractor::DrawTitle(LPCTSTR text) {
     settextcolor(WHITE);
     settextstyle(32, 0, _T("Consolas"));
 
-    LPCTSTR text = _T("");
-    switch (state) {
-        case PanelState::MAIN_MENU:   text = _T("Main Menu");   break;
-        case PanelState::GLOVE_DATA:  text = _T("Glove Data");  break;
-        case PanelState::MOTOR_DATA:  text = _T("Motor Data");  break;
-    }
+    //LPCTSTR text = _T("");
+    //switch (state) {
+    //    case PanelState::MAIN_MENU:   text = _T("Main Menu");   break;
+    //    case PanelState::GLOVE_DATA:  text = _T("Glove Data");  break;
+    //    case PanelState::MOTOR_DATA:  text = _T("Motor Data");  break;
+    //}
 
     int textW = textwidth(text);           // 获取文字宽度
     int winW  = getwidth();                // 窗口宽度
     int x = (winW - textW) / 2;            // 居中计算
     outtextxy(x, 50, text);
-}
-
-void GraphicInteractor::StartCalibrate(){
+}void GraphicInteractor::StartCalibrate() {
     cleardevice();
     settextcolor(WHITE);
     settextstyle(32, 0, _T("Consolas"));
     LPCTSTR text = _T("");
-    int winW  = getwidth();
-    controller->calibrating_process = CalibrateProcess::START;
+    int winW = getwidth();
+    int winH = getheight();
+    controller1->calibrating_process = CalibrateProcess::START;
 
-    // ---------- 第一段：2 秒 ----------
+    // ---------------- 加载带透明通道的 PNG 图片 ----------------
+    IMAGE handPostureImg;
+    loadimage(&handPostureImg, _T("hand_posture.png")); // 替换为你的文件名
+
+    // 获取背景色
+    COLORREF bgColor = getbkcolor();
+
+    // 取出原图像像素数据
+    int w = handPostureImg.getwidth();
+    int h = handPostureImg.getheight();
+    DWORD* pSrc = GetImageBuffer(&handPostureImg);
+
+    // 创建一张新的图片，背景为当前背景色
+    IMAGE handPostureImgBG(w, h);
+    DWORD* pDst = GetImageBuffer(&handPostureImgBG);
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            DWORD c = pSrc[y * w + x];
+            BYTE a = (c >> 24) & 0xFF; // Alpha 通道
+            if (a < 128) { // 透明像素 → 背景色
+                pDst[y * w + x] = bgColor;
+            }
+            else {
+                pDst[y * w + x] = c;
+            }
+        }
+    }
+
+    // ---------- 手动缩放 ----------
+    double scale = 0.6;
+    int newW = static_cast<int>(w * scale);
+    int newH = static_cast<int>(h * scale);
+    IMAGE smallImg(newW, newH);
+
+    HDC srcDC = GetImageHDC(&handPostureImgBG);
+    HDC dstDC = GetImageHDC(&smallImg);
+    SetStretchBltMode(dstDC, HALFTONE);
+    StretchBlt(dstDC, 0, 0, newW, newH, srcDC, 0, 0, w, h, SRCCOPY);
+
+    int imgX = (winW - newW) / 2;
+    int imgY = 120;
+
+    // ---------- 第一段：3 秒 ----------
     auto start1 = std::chrono::steady_clock::now();
-    while(controller->calibrating_process == CalibrateProcess::START){
+    while (controller1->calibrating_process == CalibrateProcess::START) {
         cleardevice();
+
+        // 检测右键退出
+        if (MouseHit()) {
+            MOUSEMSG m = GetMouseMsg();
+            if (m.uMsg == WM_RBUTTONDOWN) {
+                controller1->calibrating_process = CalibrateProcess::FINISH;
+                return; // 直接退出函数
+            }
+        }
+
         auto now = std::chrono::steady_clock::now();
         int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start1).count();
-        int remain = 2 - elapsed;
+        int remain = 3 - elapsed;
         if (remain <= 0) {
-            controller->calibrating_process = CalibrateProcess::STEP1;
+            controller1->calibrating_process = CalibrateProcess::STEP1;
             break;
         }
+
         TCHAR buf[256];
-        _stprintf_s(buf,_T("Start calibrate in %d seconds, put your hand flat on the table"),remain);
+        _stprintf_s(buf, _T("Start calibrate in %d seconds, put your hand flat on the table"), remain);
         int textW = textwidth(buf);
         int x = (winW - textW) / 2;
         outtextxy(x, 50, buf);
+        putimage(imgX, imgY, &smallImg);
+
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("Right click to return..."));
+
         FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
-    // ---------- 第二段：2 秒 ----------
+    // ---------- 第二段：3 秒 ----------
     auto start2 = std::chrono::steady_clock::now();
-    while(controller->calibrating_process == CalibrateProcess::STEP1){
+    while (controller1->calibrating_process == CalibrateProcess::STEP1) {
         cleardevice();
+
+        // 检测右键退出
+        if (MouseHit()) {
+            MOUSEMSG m = GetMouseMsg();
+            if (m.uMsg == WM_RBUTTONDOWN) {
+                controller1->calibrating_process = CalibrateProcess::FINISH;
+                return;
+            }
+        }
+
         auto now = std::chrono::steady_clock::now();
         int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start2).count();
-        int remain = 2 - elapsed;
+        int remain = 3 - elapsed;
         if (remain <= 0) {
-            controller->calibrating_process = CalibrateProcess::SWITCH;
+            controller1->calibrating_process = CalibrateProcess::SWITCH;
             break;
         }
+
         TCHAR buf[256];
-        _stprintf_s(buf, _T("Calibrating! Hold this gesture in %d seconds"),remain);
+        _stprintf_s(buf, _T("Calibrating! Hold this gesture in %d seconds"), remain);
         int textW = textwidth(buf);
         int x = (winW - textW) / 2;
         outtextxy(x, 50, buf);
+        putimage(imgX, imgY, &smallImg);
+
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("Right click to return..."));
+
         FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 }
+
+
 
 // 打印任意数据到指定位置
 template <typename T>
@@ -288,7 +404,7 @@ void GraphicInteractor::RecordOnce() {
         settextstyle(26, 0, _T("Consolas"));
         settextcolor(WHITE);
         outtextxy(50, winH - 100, msg.c_str());
-        outtextxy(50, winH - 60, _T("Right click to return...")); 
+        outtextxy(50, winH - 50, _T("Right click to return...")); 
 
         FlushBatchDraw();
 
@@ -428,23 +544,20 @@ int GraphicInteractor::InputNumber() {
 void GraphicInteractor::Recording() {
 
     settextcolor(WHITE);   
+    settextstyle(32, 0, _T("Consolas"));
     int winW  = getwidth();           
     int winH  = getheight();
-    settextstyle(32, 0, _T("Consolas"));
 
-    LPCTSTR title = _T("Recording Options");
-    int titleW = textwidth(title);
     int startY = 180;
     int spacing   = 70;
     int btnWidth  = 300;
     int btnHeight = 50;
     int btnX1 = (winW - btnWidth) / 2;
     int btnX2 = btnX1 + btnWidth;
-    int x = (winW - titleW) / 2;
 
     while (true) {
         cleardevice();
-        outtextxy(x, 50, title);
+        DrawTitle(_T("Recording Options"));
         std::string file_info = "Current file: " + recorder->GetFileName();
         std::string freq_info = "Current frequency: " + std::to_string(recorder->GetFrequency()); 
         std::wstring w_file_info(file_info.begin(), file_info.end());
@@ -470,7 +583,7 @@ void GraphicInteractor::Recording() {
 
         DrawButton(btnX1, startY,               btnX2, startY + btnHeight,           _T("Start Recording"), hoverStartRec);
         DrawButton(btnX1, startY + spacing,     btnX2, startY + spacing + btnHeight, _T("Stop Recording"),  hoverStopRec);
-        DrawButton(btnX1, startY + spacing*2,   btnX2, startY + spacing*2 + btnHeight,_T("Record once"),     hoverRecOnce);
+        DrawButton(btnX1, startY + spacing*2,   btnX2, startY + spacing*2 + btnHeight,_T("Record Once"),     hoverRecOnce);
         DrawButton(btnX1, startY + spacing*3,   btnX2, startY + spacing*3 + btnHeight,_T("Set Frequency"),   hoverInputFreq);
 
         if (MouseHit()) {
@@ -497,12 +610,14 @@ void GraphicInteractor::Recording() {
                 return;
             }
         }
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("right click back to menu"));
         if (recorder->recording)outtextxy(50, winH - 250, L"Recording! Stop before exit");
         else outtextxy(50, winH - 240, L"Not recording");
 
         std::string position_info = "" ;
         for (int i = 0; i < 16; i++) {
-            position_info += std::to_string(controller->position_drive[i]);
+            position_info += std::to_string(controller1->position_drive[i]);
             if (i != 15) position_info += ",";
         }
         std::wstring w_position_info(position_info.begin(), position_info.end());
@@ -513,6 +628,16 @@ void GraphicInteractor::Recording() {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
+
+void GraphicInteractor::ExchangeHand() {
+    if (controller1 != nullptr) {
+		controller1->ChangeGloveHandSide();
+    }
+    if (controller2 != nullptr) {
+        controller2->ChangeGloveHandSide();
+    }
+}
+
 void GraphicInteractor::Run() {
     BeginBatchDraw();  // 开启双缓冲
     int winW  = getwidth();
@@ -523,10 +648,11 @@ void GraphicInteractor::Run() {
         cleardevice();
 
         // 绘制标题
-        DrawTitle();
 
-        int data_start_y = 100;
-        if (controller->calibrating_process == CalibrateProcess::START){
+        //DrawTitle();
+
+        int data_start_y = 120;
+        if (controller1->calibrating_process == CalibrateProcess::START){
             StartCalibrate();
         }
 
@@ -534,12 +660,13 @@ void GraphicInteractor::Run() {
         if (state == PanelState::MAIN_MENU) {
             settextstyle(28, 0, _T("Consolas"));
             settextcolor(WHITE);
+            DrawTitle(_T("Main Manu"));
 
             // 窗口宽度
             int btnWidth  = 300;
             int btnHeight = 50;
             int spacing   = 70;
-            int startY    = 180;   // 第一个按钮纵向位置中心
+            int start_y    = 180;   // 第一个按钮纵向位置中心
 
             int btnX1 = (winW - btnWidth) / 2;
             int btnX2 = btnX1 + btnWidth;
@@ -548,19 +675,27 @@ void GraphicInteractor::Run() {
             POINT mouse;
             GetCursorPos(&mouse);
             ScreenToClient(GetHWnd(), &mouse);
+            int y = start_y;
 
-            bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY && mouse.y <= startY + btnHeight);
-            bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing && mouse.y <= startY + spacing + btnHeight);
-            bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
-            bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
-            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*4 && mouse.y <= startY + spacing*4 + btnHeight);
+            bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y,                 btnX2, y + btnHeight,         _T("Glove Data"), hoverGlove);
+			y += spacing;
+            bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y,       btnX2, y + btnHeight,_T("Motor Data"), hoverMotor);
+            y += spacing;
+            bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Calibrate"), hoverCalibrate);
+            y += spacing;
+            bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Recording"), hoverRecording);
+            y += spacing;
+            bool hoverExchanging = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y, btnX2, y + btnHeight, _T("Exchange Hand"), hoverExchanging);
+            y += spacing;
+            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
+            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Exit Program"), hoverExit);
+            y += spacing;
 
-            // 绘制按钮（居中）
-            DrawButton(btnX1, startY,                 btnX2, startY + btnHeight,         _T("Check Glove Data"), hoverGlove);
-            DrawButton(btnX1, startY + spacing,       btnX2, startY + spacing + btnHeight,_T("Check Motor Data"), hoverMotor);
-            DrawButton(btnX1, startY + spacing*2,    btnX2, startY + spacing*2 + btnHeight,_T("Calibrate"), hoverCalibrate);
-            DrawButton(btnX1, startY + spacing*3,    btnX2, startY + spacing*3 + btnHeight,_T("Recording"), hoverRecording);
-            DrawButton(btnX1, startY + spacing*4,    btnX2, startY + spacing*4 + btnHeight,_T("Exit Program"), hoverExit);
 
             // 鼠标点击检测
             if (MouseHit()) {
@@ -571,14 +706,17 @@ void GraphicInteractor::Run() {
                     else if (hoverMotor) state = PanelState::MOTOR_DATA;
                     else if (hoverCalibrate)  state = PanelState::CALIBRATE;
                     else if (hoverRecording) state = PanelState::RECORDING;
+                    else if (hoverExchanging) ExchangeHand();
                     else if (hoverExit)  state = PanelState::EXIT;
                 }
             }
         }
         // ===== 手套数据界面 =====
         else if (state == PanelState::GLOVE_DATA) {
+            DrawTitle(_T("Glove Data"));
             DisplayingDataGlove(data_start_y);  
-            outtextxy(50, winH - 60, _T("right click back to menu"));
+            settextstyle(26, 0, _T("Consolas"));
+            outtextxy(50, winH - 50, _T("right click back to menu"));
             if (MouseHit()) {
                 MOUSEMSG msg = GetMouseMsg();
                 if (msg.uMsg == WM_RBUTTONDOWN) {
@@ -588,8 +726,10 @@ void GraphicInteractor::Run() {
         }
         // ===== 电机数据界面 =====
         else if (state == PanelState::MOTOR_DATA) {
+            DrawTitle(_T("Motor Data"));
             DisplayingDataMotor(data_start_y);   
-            outtextxy(50, winH - 60, _T("right click back to menu"));
+            settextstyle(26, 0, _T("Consolas"));
+            outtextxy(50, winH - 50, _T("right click back to menu"));
             if (MouseHit()) {
                 MOUSEMSG msg = GetMouseMsg();
                 if (msg.uMsg == WM_RBUTTONDOWN) {

@@ -375,6 +375,11 @@ public:
 	ClientSkeletonCollection* GetCurrentSkeleton();
 	void LoadSkeleton(Side p_Side);
 	void UnloadSkeleton();
+	int GetSkeletonCount();
+	//int GetPairedGloveCount() const;
+	uint32_t GetLeftGloveId() const;
+	uint32_t GetRightGloveId() const;
+
 };
 
 #endif

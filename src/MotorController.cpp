@@ -11,26 +11,11 @@ std::vector<float> MotorController::thumb_mcp_limit = { 0.0f, 70.0f };
 std::vector<float> MotorController::thumb_cmc_stretch_limit = { 48.0f, 32.0f };
 std::vector<float> MotorController::thumb_cmc_spread_limit = { 18.0f, 58.0f };
 
-void MotorController::UpdateTipDistance() {
-    if (client->GetCurrentSkeleton()) {
-        skeleton = client->GetCurrentSkeleton()->skeletons[0];
-        ManusTransform thumb_tf  = skeleton.nodes[4].transform;
-        ManusTransform index_tf  = skeleton.nodes[8].transform;
-        ManusTransform middle_tf = skeleton.nodes[12].transform;
-        ManusTransform ring_tf   = skeleton.nodes[16].transform;
-        ManusTransform pinky_tf  = skeleton.nodes[20].transform;
-        tip_distances[0] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, index_tf.position.x, index_tf.position.y, index_tf.position.z);
-        tip_distances[1] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, middle_tf.position.x, middle_tf.position.y, middle_tf.position.z);
-        tip_distances[2] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, ring_tf.position.x, ring_tf.position.y, ring_tf.position.z);
-        tip_distances[3] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, pinky_tf.position.x, pinky_tf.position.y, pinky_tf.position.z);
-        std::cout << "Distance " << tip_distances[0] << "," << tip_distances[1] << "," << tip_distances[2] << "," << tip_distances[3] << "," << std::endl;
-    }
-}
-
-MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client) :
+MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client, bool hand_side) :
     pcan(pcan),
     PcanHandle(PcanHandle),
     client(client),
+	hand_side(hand_side),
     position_norm(16, 0.0f),
     position_now(16, 0),
     position_drive(16, 0),
@@ -52,6 +37,32 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
                             { 1245, 2185, 2462, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
     {
     }
+
+void MotorController::UpdateTipDistance() {
+
+	std::cout << "update" << std::endl;
+    if (client->GetCurrentSkeleton()) {
+        if (hand_side) {
+            skeleton = client->GetCurrentSkeleton()->skeletons[0];
+        } else if (client->GetCurrentSkeleton()->skeletons.size() > 1) {
+            skeleton = client->GetCurrentSkeleton()->skeletons[1];
+        }
+        ManusTransform thumb_tf = skeleton.nodes[4].transform;
+        ManusTransform index_tf = skeleton.nodes[8].transform;
+        ManusTransform middle_tf = skeleton.nodes[12].transform;
+        ManusTransform ring_tf = skeleton.nodes[16].transform;
+        ManusTransform pinky_tf = skeleton.nodes[20].transform;
+        tip_distances[0] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, index_tf.position.x, index_tf.position.y, index_tf.position.z);
+        tip_distances[1] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, middle_tf.position.x, middle_tf.position.y, middle_tf.position.z);
+        tip_distances[2] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, ring_tf.position.x, ring_tf.position.y, ring_tf.position.z);
+        tip_distances[3] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, pinky_tf.position.x, pinky_tf.position.y, pinky_tf.position.z);
+        std::cout << "Distance " << tip_distances[0] << "," << tip_distances[1] << "," << tip_distances[2] << "," << tip_distances[3] << "," << std::endl;
+    }
+}
+
+void MotorController::ChangeGloveHandSide() {
+    hand_side = !hand_side;
+}
 
 /**
  * @brief 处理大拇指的映射逻辑
@@ -96,13 +107,16 @@ void MotorController::ProcessFinger(int finger_index) {
     // 一定程度上抑制当mcp弯曲较大时（趋近握拳）的mcp侧摆角。
     mcp_spread_norm = copysign(std::max(0.0f, std::abs(mcp_spread_norm) - 0.8f * mcp_stretch_norm), mcp_spread_norm);
 
-    position_norm[base_pos_index[finger_index] + 1] = (mcp_spread_norm < 0)
-        ? std::clamp(mcp_stretch_norm - spread_coeff_neg[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
-        : std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+    float mcp_inside_motor = (mcp_spread_norm < 0) ? 
+          std::clamp(mcp_stretch_norm - spread_coeff_neg[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f): 
+          std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
 
-    position_norm[base_pos_index[finger_index]] = (mcp_spread_norm > 0)
-        ? std::clamp(mcp_stretch_norm + spread_coeff_pos[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f)
-        : std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+    float mcp_outside_motor = position_norm[base_pos_index[finger_index]] = (mcp_spread_norm > 0) ? 
+          std::clamp(mcp_stretch_norm + spread_coeff_pos[finger_index] * mcp_spread_norm * (1-std::clamp(mcp_stretch_norm, 0.0f, 1.0f)), 0.0f, 1.0f): 
+          std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+
+	position_norm[base_pos_index[finger_index] + 1] = hand_side ? mcp_inside_motor : mcp_outside_motor;
+	position_norm[base_pos_index[finger_index]] = hand_side ? mcp_outside_motor : mcp_inside_motor;
 }
 
 void MotorController::PointingOptimize() {
@@ -110,7 +124,6 @@ void MotorController::PointingOptimize() {
     std::vector<float> pointing_motor_position_norm(16);
     int closest_tip_index = std::distance(tip_distances.begin(),std::min_element(tip_distances.begin(), tip_distances.end()));
     float closest_tip_distance = tip_distances[closest_tip_index];
-	std::cout << "Closest tip index: " << closest_tip_index << std::endl;
 
     for (size_t i = 0; i < 16; i++) {
         pointing_motor_position_norm[i] = pointing_motor_position[closest_tip_index][i] / 4096.0f;
@@ -166,17 +179,25 @@ void MotorController::Calibrate() {
  * @brief 主循环函数
  */
 void MotorController::Run() {
-
+    
     // 等待手套sdk初始化结束后，加载骨骼模型
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    client->LoadSkeleton(Side_Left);
-
+    if (hand_side) {
+        client->LoadSkeleton(Side_Left);
+    } else {
+        client->LoadSkeleton(Side_Right);
+    }
     while (true) {
-        ErgonomicsData leftData = client->GetGloveErgoData(true); // true = 左手
-        glove_data = client->GetGloveErgoData(true);
-        if (calibrating_process == CalibrateProcess::START) {
-            Calibrate();
+
+
+        if (hand_side) {
+            glove_data = client->GetGloveErgoData(true);
         }
+        else {
+            glove_data = client->GetGloveErgoData(false);
+        }
+
+        if (calibrating_process == CalibrateProcess::START) { Calibrate(); }
 
 		// 更新指尖距离数据
         UpdateTipDistance();

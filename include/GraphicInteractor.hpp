@@ -26,24 +26,30 @@ private:
 
     bool running = true;  // 控制循环是否继续
     bool paused = false;  // 是否暂停显示
-    MotorController* controller;
+    MotorController* controller1;
+	MotorController* controller2;
     Recorder* recorder;
 
     ErgonomicsData left_hand_data;// 左手
     ErgonomicsData right_hand_data;// 右手
 
-    std::vector<int> velocity_now;
-    std::vector<int> velocity_drive;
-    std::vector<int> position_now;
-    std::vector<int> position_drive;
+    std::vector<int> left_velocity_now;
+    std::vector<int> left_velocity_drive;
+    std::vector<int> left_position_now;
+    std::vector<int> left_position_drive;
+
+    std::vector<int> right_velocity_now;
+    std::vector<int> right_velocity_drive;
+    std::vector<int> right_position_now;
+    std::vector<int> right_position_drive;
     PanelState state;
 
 public:
-    GraphicInteractor( MotorController* controller, Recorder* recorder);
+    GraphicInteractor( MotorController* controller1, MotorController* controller2, Recorder* recorder);
     ~GraphicInteractor();
     ClientReturnCode DisplayingDataGlove(int start_y);
     void DisplayingDataMotor(int start_y);
-    void DrawTitle();
+    void DrawTitle(LPCTSTR text);
     void DrawButton(int left, int top, int right, int bottom, LPCTSTR text, bool hover);
     template <typename T>
     void PrintSpecificData(const T& data, int start_y, int start_x = 50);
@@ -52,6 +58,7 @@ public:
     void RecordOnce();
     void Recording();
     int InputNumber();
+	void ExchangeHand();
     void Init();
     void Run();
 };

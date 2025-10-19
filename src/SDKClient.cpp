@@ -1024,9 +1024,9 @@ ClientReturnCode SDKClient::DisplayingData()
 /// @brief display the ergonomics data of the gloves, and handles haptic commands.
 /// @return 
 ClientReturnCode SDKClient::DisplayingDataGlove()
-{
+{/*
 	ClientLog::print("[Q] Back  <<Gloves & Dongles>> [ESC] quit");
-	ClientLog::print("Haptic keys: left:([1]-[5] = pinky-thumb.) right:([6]-[0] = thumb-pinky.)");
+	ClientLog::print("Haptic keys: left:([1]-[5] = pinky-thumb.) right:([6]-[0] = thumb-pinky.)");*/
 
 	AdvanceConsolePosition(3);
 
@@ -1451,8 +1451,8 @@ void SDKClient::PrintDongleData()
 void SDKClient::PrintSystemMessage()
 {
 	m_SystemMessageMutex.lock();
-	ClientLog::print(""); //blank line
-	ClientLog::print("Received System data:{} / code:{}", m_SystemMessage, (int32_t)m_SystemMessageCode);
+	//ClientLog::print(""); //blank line
+	//ClientLog::print("Received System data:{} / code:{}", m_SystemMessage, (int32_t)m_SystemMessageCode);
 	m_SystemMessageMutex.unlock();
 }
 
@@ -3885,4 +3885,41 @@ void SDKClient::LoadSkeleton(Side p_side) {
 
 void SDKClient::UnloadSkeleton() {
 	UnloadTestSkeleton();
+}
+
+int SDKClient::GetSkeletonCount() {
+	if (m_Skeleton == nullptr || m_Skeleton->skeletons.size() == 0){
+		return 0;
+	}
+	return static_cast<int>(m_Skeleton->skeletons.size());
+}
+
+//int SDKClient::GetPairedGloveCount() const
+//{
+//	// 检查 Landscape 是否有效
+//	if (!m_Landscape || !m_Landscape->gloveDevices.gloves)
+//	{
+//		ClientLog::warn("Landscape or glove devices data is not initialized.");
+//		return -1;
+//	}
+//
+//	int pairedCount = 0;
+//	for (size_t i = 0; i < m_Landscape->gloveDevices.gloveCount; i++)
+//	{
+//		// 统计所有非 Unpaired 状态的手套
+//		if (m_Landscape->gloveDevices.gloves[i].pairedState != DevicePairedState_Unpaired)
+//		{
+//			pairedCount++;
+//		}
+//	}
+//
+//	return pairedCount;
+//}
+uint32_t SDKClient::GetLeftGloveId() const
+{
+	return m_FirstLeftGloveID;
+}
+uint32_t SDKClient::GetRightGloveId() const
+{
+	return m_FirstRightGloveID;
 }
