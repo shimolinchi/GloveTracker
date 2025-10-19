@@ -31,12 +31,14 @@ void GraphicInteractor::Init() {
 }
 
 void GraphicInteractor::UpdateData() {
-    left_hand_data = controller1->client->GetGloveErgoData(true);
+    if (controller1 != nullptr) {
+        left_hand_data = controller1->client->GetGloveErgoData(true);
 
-    left_velocity_now = controller1->velocity_now;
-    left_velocity_drive = controller1->velocity_drive;
-    left_position_now = controller1->position_now;
-    left_position_drive = controller1->position_drive;
+        left_velocity_now = controller1->velocity_now;
+        left_velocity_drive = controller1->velocity_drive;
+        left_position_now = controller1->position_now;
+        left_position_drive = controller1->position_drive;
+    }
 
     if (controller2 != nullptr) {
         right_hand_data = controller2->client->GetGloveErgoData(false);
@@ -652,7 +654,7 @@ void GraphicInteractor::Run() {
         //DrawTitle();
 
         int data_start_y = 120;
-        if (controller1->calibrating_process == CalibrateProcess::START){
+        if (controller1 != nullptr && controller1->calibrating_process == CalibrateProcess::START){
             StartCalibrate();
         }
 

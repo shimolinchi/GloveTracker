@@ -40,7 +40,6 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
 
 void MotorController::UpdateTipDistance() {
 
-	std::cout << "update" << std::endl;
     if (client->GetCurrentSkeleton()) {
         if (hand_side) {
             skeleton = client->GetCurrentSkeleton()->skeletons[0];
@@ -56,7 +55,7 @@ void MotorController::UpdateTipDistance() {
         tip_distances[1] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, middle_tf.position.x, middle_tf.position.y, middle_tf.position.z);
         tip_distances[2] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, ring_tf.position.x, ring_tf.position.y, ring_tf.position.z);
         tip_distances[3] = CalculateDistance(thumb_tf.position.x, thumb_tf.position.y, thumb_tf.position.z, pinky_tf.position.x, pinky_tf.position.y, pinky_tf.position.z);
-        std::cout << "Distance " << tip_distances[0] << "," << tip_distances[1] << "," << tip_distances[2] << "," << tip_distances[3] << "," << std::endl;
+        //std::cout << "Distance " << tip_distances[0] << "," << tip_distances[1] << "," << tip_distances[2] << "," << tip_distances[3] << "," << std::endl;
     }
 }
 
@@ -182,11 +181,6 @@ void MotorController::Run() {
     
     // 等待手套sdk初始化结束后，加载骨骼模型
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    if (hand_side) {
-        client->LoadSkeleton(Side_Left);
-    } else {
-        client->LoadSkeleton(Side_Right);
-    }
     while (true) {
 
 

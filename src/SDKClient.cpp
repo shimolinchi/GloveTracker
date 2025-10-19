@@ -56,12 +56,12 @@ ClientReturnCode SDKClient::Initialize()
 /// This is a simple state machine which switches between different substates.
 ClientReturnCode SDKClient::Run()
 {
-	ClearConsole();
+	//ClearConsole();
 
 	ClientReturnCode t_Result;
 	while (!m_RequestedExit)
 	{
-		if (m_ConsoleClearTickCount >= 100 || m_State != m_PreviousState)
+		if (m_ConsoleClearTickCount >= 500 || m_State != m_PreviousState)
 		{
 			ClearConsole();
 
@@ -780,7 +780,7 @@ ClientReturnCode SDKClient::NoHostsFound()
 {
 	if (m_ConsoleClearTickCount == 0)
 	{
-		AdvanceConsolePosition(-1);
+		// AdvanceConsolePosition(-1);
 		ClientLog::print("No hosts were found. Retry?");
 		ClientLog::print("[R]   retry");
 		ClientLog::print("[ESC] exit");
@@ -802,7 +802,7 @@ ClientReturnCode SDKClient::PickingHost()
 {
 	if (m_ConsoleClearTickCount == 0)
 	{
-		AdvanceConsolePosition(-1);
+		// AdvanceConsolePosition(-1);
 
 		ClientLog::print("[R]   retry   [ESC] exit");
 		ClientLog::print("Pick a host to connect to.");
@@ -899,7 +899,7 @@ ClientReturnCode SDKClient::ConnectingToCore()
 /// @return 
 ClientReturnCode SDKClient::UpdateBeforeDisplayingData()
 {
-	AdvanceConsolePosition(-1);
+	// AdvanceConsolePosition(-1);
 
 	m_SkeletonMutex.lock();
 	if (m_NextSkeleton != nullptr)
@@ -991,19 +991,19 @@ ClientReturnCode SDKClient::UpdateBeforeDisplayingData()
 /// and then prints any relevant data of it.
 ClientReturnCode SDKClient::DisplayingData()
 {
-	ClientLog::print("<<Main Menu>> [ESC] quit");
-	ClientLog::print("[G] Go To Gloves & Dongle Menu");
-	ClientLog::print("[S] Go To Skeleton Menu");
-	ClientLog::print("[X] Go To Temporary Skeleton Menu");
-	ClientLog::print("[T] Go To Tracker Menu");
-	ClientLog::print("[D] Go To Landscape Time Info");
-	ClientLog::print("[J] Go To Gestures Menu");
-	ClientLog::print("[C] Go To Glove Calibration Menu");
-	ClientLog::print("[P] Go To Pairing Menu");
-	ClientLog::print("[U] Go To Users Menu");
-	ClientLog::print("[E] Go To Raw device data Menu");
+	//ClientLog::print("<<Main Menu>> [ESC] quit");
+	//ClientLog::print("[G] Go To Gloves & Dongle Menu");
+	//ClientLog::print("[S] Go To Skeleton Menu");
+	//ClientLog::print("[X] Go To Temporary Skeleton Menu");
+	//ClientLog::print("[T] Go To Tracker Menu");
+	//ClientLog::print("[D] Go To Landscape Time Info");
+	//ClientLog::print("[J] Go To Gestures Menu");
+	//ClientLog::print("[C] Go To Glove Calibration Menu");
+	//ClientLog::print("[P] Go To Pairing Menu");
+	//ClientLog::print("[U] Go To Users Menu");
+	//ClientLog::print("[E] Go To Raw device data Menu");
 
-	AdvanceConsolePosition(11);
+	//// AdvanceConsolePosition(11);
 
 	GO_TO_DISPLAY('G', DisplayingDataGlove);
 	GO_TO_DISPLAY('S', DisplayingDataSkeleton);
@@ -1024,11 +1024,11 @@ ClientReturnCode SDKClient::DisplayingData()
 /// @brief display the ergonomics data of the gloves, and handles haptic commands.
 /// @return 
 ClientReturnCode SDKClient::DisplayingDataGlove()
-{/*
+{
 	ClientLog::print("[Q] Back  <<Gloves & Dongles>> [ESC] quit");
-	ClientLog::print("Haptic keys: left:([1]-[5] = pinky-thumb.) right:([6]-[0] = thumb-pinky.)");*/
+	ClientLog::print("Haptic keys: left:([1]-[5] = pinky-thumb.) right:([6]-[0] = thumb-pinky.)");
 
-	AdvanceConsolePosition(3);
+	//// AdvanceConsolePosition(3);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1048,7 +1048,7 @@ ClientReturnCode SDKClient::DisplayingDataSkeleton()
 	ClientLog::print("<Skeleton> [D] Toggle Send to DevTools ({})", m_SendToDevTools);
 	ClientLog::print("<Skeleton Haptics> left:([1]-[5] = pinky-thumb) right:([6]-[0] = thumb-pinky)");
 
-	AdvanceConsolePosition(4);
+	//// AdvanceConsolePosition(4);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1057,7 +1057,7 @@ ClientReturnCode SDKClient::DisplayingDataSkeleton()
 
 	PrintSkeletonData();
 
-	AdvanceConsolePosition(1);
+	//// AdvanceConsolePosition(1);
 	PrintSystemMessage();
 
 	return ClientReturnCode::ClientReturnCode_Success;
@@ -1068,7 +1068,7 @@ ClientReturnCode SDKClient::DisplayingDataTracker()
 	ClientLog::print("[Q] Back  <<Tracker>> [ESC] quit");
 	ClientLog::print("[O] Toggle Test Tracker [G] Toggle per user tracker display [T] Set Tracker Offset to Left Wrist");
 
-	AdvanceConsolePosition(3);
+	// AdvanceConsolePosition(3);
 
 	GO_TO_MENU_IF_REQUESTED();
 	HandleTrackerCommands();
@@ -1088,7 +1088,7 @@ ClientReturnCode SDKClient::DisplayingDataTemporarySkeleton()
 	ClientLog::print("<Skeleton>[B] Build Temporary Skeleton [C] Clear Temporary Skeleton [D] Clear All Temporary Skeletons For The Current Session");
 	ClientLog::print("<Skeleton>[E] Save Temporary Skeleton To File, [F] Get Temporary Skeleton From File");
 
-	AdvanceConsolePosition(5);
+	// AdvanceConsolePosition(5);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1097,7 +1097,7 @@ ClientReturnCode SDKClient::DisplayingDataTemporarySkeleton()
 	PrintTemporarySkeletonInfo();
 	GetTemporarySkeletonIfModified();
 
-	AdvanceConsolePosition(3);
+	// AdvanceConsolePosition(3);
 	PrintSystemMessage();
 
 	return ClientReturnCode::ClientReturnCode_Success;
@@ -1107,7 +1107,7 @@ ClientReturnCode SDKClient::DisplayingLandscapeTimeData()
 {
 	ClientLog::print("[Q] Back  <<Landscape Time Data>> [ESC] quit");
 
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1123,7 +1123,7 @@ ClientReturnCode SDKClient::DisplayingDataGestures()
 	ClientLog::print("[Q] Back  <<Gesture Data>> [ESC] quit");
 	ClientLog::print("<Gestures>[H] Show other Hand");
 
-	AdvanceConsolePosition(3);
+	// AdvanceConsolePosition(3);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1131,7 +1131,7 @@ ClientReturnCode SDKClient::DisplayingDataGestures()
 
 	PrintGestureData();
 
-	AdvanceConsolePosition(1);
+	// AdvanceConsolePosition(1);
 
 	PrintSystemMessage();
 
@@ -1140,13 +1140,13 @@ ClientReturnCode SDKClient::DisplayingDataGestures()
 
 ClientReturnCode SDKClient::DisplayingGloveCalibration()
 {
-	ClientLog::print("[Q] Back  <<Glove Calibration>> [ESC] quit");
-	ClientLog::print("<Glove Calibration>[H] Toggle other Hand [P] Add 1 to the calibration step [M] Remove 1 from the calibration step");
-	ClientLog::print("<Glove Calibration>[S] Start glove calibration [C] Cancel glove calibration [F] Finish glove calibration");
-	ClientLog::print("<Glove Calibration>[E] Execute calibration step");
-	ClientLog::print("<Glove Calibration>[K] Save glove calibration [L] Load glove calibration");
+	//ClientLog::print("[Q] Back  <<Glove Calibration>> [ESC] quit");
+	//ClientLog::print("<Glove Calibration>[H] Toggle other Hand [P] Add 1 to the calibration step [M] Remove 1 from the calibration step");
+	//ClientLog::print("<Glove Calibration>[S] Start glove calibration [C] Cancel glove calibration [F] Finish glove calibration");
+	//ClientLog::print("<Glove Calibration>[E] Execute calibration step");
+	//ClientLog::print("<Glove Calibration>[K] Save glove calibration [L] Load glove calibration");
 
-	AdvanceConsolePosition(5);
+	// AdvanceConsolePosition(5);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1154,7 +1154,7 @@ ClientReturnCode SDKClient::DisplayingGloveCalibration()
 
 	PrintGloveCalibrationData();
 
-	AdvanceConsolePosition(3);
+	// AdvanceConsolePosition(3);
 	PrintSystemMessage();
 
 	return ClientReturnCode::ClientReturnCode_Success;
@@ -1171,7 +1171,7 @@ ClientReturnCode SDKClient::DisplayingPairing()
 
 	HandlePairingCommands();
 
-	AdvanceConsolePosition(4);
+	// AdvanceConsolePosition(4);
 	PrintSystemMessage();
 
 	return ClientReturnCode::ClientReturnCode_Success;
@@ -1192,7 +1192,7 @@ ClientReturnCode SDKClient::DisplayingUsers()
 	ClientLog::print("<<Users>> [K] Move User down");
 	ClientLog::print("<<Users>> [N] Change Username");
 
-	AdvanceConsolePosition(12);
+	// AdvanceConsolePosition(12);
 
 	GO_TO_MENU_IF_REQUESTED();
 
@@ -1209,7 +1209,7 @@ ClientReturnCode SDKClient::DisplayingRawDeviceData()
 
 	GO_TO_MENU_IF_REQUESTED();
 
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 	PrintRawDeviceData();
 
 	return ClientReturnCode::ClientReturnCode_Success;
@@ -1221,13 +1221,13 @@ ClientReturnCode SDKClient::DisconnectedFromCore()
 {
 	if (m_Host == nullptr) { return ClientReturnCode::ClientReturnCode_FailedToConnect; }
 
-	AdvanceConsolePosition(-1);
+	// AdvanceConsolePosition(-1);
 
 	auto t_Duration = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - m_TimeSinceLastDisconnect).count();
 	ClientLog::print("The SDK lost connection with Manus Core {} seconds ago.", t_Duration);
 	ClientLog::print("[P] Pick a new host.   [ESC] exit");
 
-	AdvanceConsolePosition(3);
+	//// AdvanceConsolePosition(3);
 
 	bool t_ConnectLocally = m_ConnectionType == ConnectionType::ConnectionType_Local;
 	if (t_ConnectLocally)
@@ -1255,7 +1255,7 @@ ClientReturnCode SDKClient::DisconnectedFromCore()
 		}
 	}
 
-	AdvanceConsolePosition(10);
+	//// AdvanceConsolePosition(10);
 
 
 	if (GetKeyDown('P'))
@@ -1383,7 +1383,7 @@ void SDKClient::PrintErgonomicsData()
 		ClientLog::print(" ...No Data...");
 	}
 
-	AdvanceConsolePosition(14);
+	//// AdvanceConsolePosition(14);
 }
 
 std::string ConvertDeviceClassTypeToString(DeviceClassType p_Type)
@@ -1443,7 +1443,7 @@ void SDKClient::PrintDongleData()
 			ConvertDeviceFamilyTypeToString(t_DongleData.familyType));
 		ClientLog::print(" License: {}", t_DongleData.licenseType);
 
-		AdvanceConsolePosition(4);
+		//// AdvanceConsolePosition(4);
 	}
 }
 
@@ -1468,7 +1468,7 @@ void SDKClient::PrintSkeletonData()
 
 	ClientLog::print("Received Skeleton data. skeletons:{} first skeleton id:{}", m_Skeleton->skeletons.size(), (int32_t)m_Skeleton->skeletons[0].info.id);
 
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 }
 
 void SDKClient::PrintRawSkeletonData()
@@ -1510,7 +1510,7 @@ void SDKClient::PrintRawSkeletonData()
 	}
 
 	ClientLog::print("Fetched array with Raw Skeleton Hierarchy with {} nodes.", (int32_t)t_NodeCount);
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 }
 
 /// @brief Prints the raw device data
@@ -1545,7 +1545,7 @@ void SDKClient::PrintRawDeviceData()
 		t_ConsolePositions++;
 	}
 
-	AdvanceConsolePosition(t_ConsolePositions);
+	//// AdvanceConsolePosition(t_ConsolePositions);
 }
 
 /// @brief Prints the tracker data
@@ -1556,17 +1556,17 @@ void SDKClient::PrintTrackerData()
 	ClientLog::print("Tracker test active: {}.", m_TrackerTest); //To show that test tracker is being sent to core
 	ClientLog::print("Per user tracker display: {}.", m_TrackerDataDisplayPerUser);
 
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 
 	if (m_TrackerDataDisplayPerUser)
 	{
 		PrintTrackerDataPerUser();
-		AdvanceConsolePosition(10);
+		//// AdvanceConsolePosition(10);
 	}
 	else
 	{
 		PrintTrackerDataGlobal();
-		AdvanceConsolePosition(3);
+		//// AdvanceConsolePosition(3);
 	}
 
 	// now, as a test, print the tracker data received from the stream
@@ -1674,7 +1674,7 @@ void SDKClient::PrintLandscapeTimeData()
 	ClientLog::print("Fake signal: {} | Sync Pulse: {} | Sync Status: {}", m_Landscape->time.fakeTimecode, m_Landscape->time.useSyncPulse, m_Landscape->time.syncStatus);
 	ClientLog::print("Device keep alive: {} | Timecode Status: {}", m_Landscape->time.deviceKeepAlive, m_Landscape->time.timecodeStatus);
 
-	AdvanceConsolePosition(6);
+	// AdvanceConsolePosition(6);
 }
 
 void SDKClient::PrintGestureData()
@@ -1690,7 +1690,7 @@ void SDKClient::PrintGestureData()
 	if (t_Gest == nullptr)
 	{
 		ClientLog::print("No Gesture information for first {} glove.", t_Side);
-		AdvanceConsolePosition(1);
+		//// AdvanceConsolePosition(1);
 		return;
 	}
 	ClientLog::print("Total count of gestures for the {} glove: {}", t_Side, t_Gest->info.totalGestureCount);
@@ -1710,7 +1710,7 @@ void SDKClient::PrintGestureData()
 		ClientLog::print("Gesture {} ({}) has a probability of {}%.", t_Name, t_Gest->probabilities[i].id, t_Gest->probabilities[i].percent * 100.0f);
 	}
 
-	AdvanceConsolePosition(t_Max + 2);
+	//// AdvanceConsolePosition(t_Max + 2);
 }
 
 void SDKClient::PrintGloveCalibrationData()
@@ -1729,7 +1729,7 @@ void SDKClient::PrintGloveCalibrationData()
 	ClientLog::print("In progress: {}", m_IsCalibrationInProgress);
 	ClientLog::print("Message: {}", m_CalibrationMessage);
 
-	AdvanceConsolePosition(6);
+	//// AdvanceConsolePosition(6);
 }
 
 /// @brief Prints the type of the first chain generated by the AllocateChain function, this is used for testing.
@@ -1819,7 +1819,7 @@ void SDKClient::PrintSkeletonInfo()
 		break;
 	}
 	}
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 }
 
 /// @brief This support function checks if a temporary skeleton related to the current session has been modified and gets it.
@@ -2379,7 +2379,7 @@ void SDKClient::HandleUserCommands()
 		{
 			ClientLog::warn("Something went wrong disabling Auto Assignment");
 		}
-		AdvanceConsolePosition(2);
+		//// AdvanceConsolePosition(2);
 	}
 
 	if (GetKeyDown('X'))
@@ -2392,7 +2392,7 @@ void SDKClient::HandleUserCommands()
 		{
 			ClientLog::warn("Something went wrong enabling Auto Assignment");
 		}
-		AdvanceConsolePosition(2);
+		//// AdvanceConsolePosition(2);
 	}
 
 	if (GetKeyDown('A'))
@@ -2449,12 +2449,12 @@ void SDKClient::AddUser()
 	if (CoreSdk_AddUser(t_Username, &t_UserID) != SDKReturnCode_Success)
 	{
 		ClientLog::warn("Something went wrong creating a new user.");
-		AdvanceConsolePosition(2);
+		//// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("User created with ID {}", t_UserID);
-	AdvanceConsolePosition(2);
+	//// AdvanceConsolePosition(2);
 }
 
 void SDKClient::RemoveUser()
@@ -2462,7 +2462,7 @@ void SDKClient::RemoveUser()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not remove user, no users were found.");
-		AdvanceConsolePosition(2);
+		//// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2472,12 +2472,12 @@ void SDKClient::RemoveUser()
 	if (CoreSdk_RemoveUser(t_UserToRemove.id) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Removed user {}", std::string(t_UserToRemove.name));
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::warn("Something went wrong removing user {}", std::string(t_UserToRemove.name));
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::AssignDongle()
@@ -2485,7 +2485,7 @@ void SDKClient::AssignDongle()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not assign dongle, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2493,7 +2493,7 @@ void SDKClient::AssignDongle()
 	if (!GetFirstAvailableDongleId(&t_DongleId))
 	{
 		ClientLog::warn("Could not assign dongle, no available dongle was found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2511,14 +2511,14 @@ void SDKClient::AssignDongle()
 	if (!t_UserFound)
 	{
 		ClientLog::warn("Could not assign dongle, no available user was found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	if (CoreSdk_AssignDongleToUser(t_UserId, t_DongleId) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Assigned dongle {} to user {}.", t_DongleId, t_UserId);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2530,7 +2530,7 @@ void SDKClient::UnassignDongle()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not unassign dongle, no users were found.");
-		AdvanceConsolePosition(1);
+		// AdvanceConsolePosition(1);
 		return;
 	}
 
@@ -2547,19 +2547,19 @@ void SDKClient::UnassignDongle()
 	if (!t_DongleFound)
 	{
 		ClientLog::warn("Could not unassign dongle, no user with an assigned dongle was found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	if (CoreSdk_AssignDongleToUser(t_UserId, 0) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Unassigned dongle from user {}.", t_UserId);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("Something went wrong unassigning dongle from user {}.", t_UserId);
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::AssignGloveToUser()
@@ -2567,7 +2567,7 @@ void SDKClient::AssignGloveToUser()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not asssign glove, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2575,7 +2575,7 @@ void SDKClient::AssignGloveToUser()
 	if (!GetFirstAvailableGlove(&t_Glove))
 	{
 		ClientLog::warn("Could not asssign glove, no available glove was found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2609,19 +2609,19 @@ void SDKClient::AssignGloveToUser()
 	if (t_UserId == 0)
 	{
 		ClientLog::warn("Could not asssign glove, no available user was found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	if (CoreSdk_AssignGloveToUser(t_UserId, t_Glove.id, t_Glove.side) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Assigned glove {} to user {}.", t_Glove.id, t_UserId);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("Something went wrong assigning glove {} to user {}.", t_Glove.id, t_UserId);
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::UnassignGlove()
@@ -2629,7 +2629,7 @@ void SDKClient::UnassignGlove()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not unasssign glove, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2674,7 +2674,7 @@ void SDKClient::UnassignGlove()
 	if (CoreSdk_AssignGloveToUser(t_UserId, 0, t_Side) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Unassigned {} glove from user {}.", t_SideString, t_UserId);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2686,7 +2686,7 @@ void SDKClient::MoveUserUp()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not move user, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2704,12 +2704,12 @@ void SDKClient::MoveUserUp()
 	if (CoreSdk_MoveUserUp(t_HighestID) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Moved user {} up.", t_HighestID);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("Something went wrong moving user {} up.", t_HighestID);
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::MoveUserDown()
@@ -2717,7 +2717,7 @@ void SDKClient::MoveUserDown()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not move user, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2735,12 +2735,12 @@ void SDKClient::MoveUserDown()
 	if (CoreSdk_MoveUserDown(t_HighestID) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Moved user {} down.", t_HighestID);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("Something went wrong moving user {} down.", t_HighestID);
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::RenameUser()
@@ -2748,7 +2748,7 @@ void SDKClient::RenameUser()
 	if (m_Landscape->users.userCount < 1)
 	{
 		ClientLog::warn("Could not rename user, no users were found.");
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
@@ -2767,12 +2767,12 @@ void SDKClient::RenameUser()
 	if (CoreSdk_SetUserName(t_UserToRename, t_NewName.data()) == SDKReturnCode_Success)
 	{
 		ClientLog::print("Renamed user {}.", t_UserToRename);
-		AdvanceConsolePosition(2);
+		// AdvanceConsolePosition(2);
 		return;
 	}
 
 	ClientLog::print("Something went wrong renaming user {}.", t_UserToRename);
-	AdvanceConsolePosition(2);
+	// AdvanceConsolePosition(2);
 }
 
 void SDKClient::PrintUsersLandscapeData()
@@ -2786,7 +2786,7 @@ void SDKClient::PrintUsersLandscapeData()
 			m_Landscape->users.users[i].leftGloveID,
 			m_Landscape->users.users[i].rightGloveID);
 
-		AdvanceConsolePosition(1);
+		// AdvanceConsolePosition(1);
 	}
 }
 
@@ -3896,7 +3896,7 @@ int SDKClient::GetSkeletonCount() {
 
 //int SDKClient::GetPairedGloveCount() const
 //{
-//	// ¼ì²é Landscape ÊÇ·ñÓÐÐ§
+//	// ï¿½ï¿½ï¿½ Landscape ï¿½Ç·ï¿½ï¿½ï¿½Ð§
 //	if (!m_Landscape || !m_Landscape->gloveDevices.gloves)
 //	{
 //		ClientLog::warn("Landscape or glove devices data is not initialized.");
@@ -3906,7 +3906,7 @@ int SDKClient::GetSkeletonCount() {
 //	int pairedCount = 0;
 //	for (size_t i = 0; i < m_Landscape->gloveDevices.gloveCount; i++)
 //	{
-//		// Í³¼ÆËùÓÐ·Ç Unpaired ×´Ì¬µÄÊÖÌ×
+//		// Í³ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½ Unpaired ×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //		if (m_Landscape->gloveDevices.gloves[i].pairedState != DevicePairedState_Unpaired)
 //		{
 //			pairedCount++;

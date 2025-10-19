@@ -36,14 +36,14 @@ void SDKThread(SDKClient* client)
     if (t_Result != ClientReturnCode::ClientReturnCode_Success)
     {
         client->ShutDown();
-        std::cerr << "[SDKThread] Run() failed with code " << static_cast<int>(t_Result) << std::endl;  
+        std::cerr <<"SDK client initialize failed with code " << static_cast<int>(t_Result) << std::endl;  
     }
     ManusSDK::ClientLog::print("SDK client is initialized.");
     t_Result = client->Run();
     if (t_Result != ClientReturnCode::ClientReturnCode_Success)
     {
         client->ShutDown();
-        std::cerr << "[SDKThread] Run() failed with code " << static_cast<int>(t_Result) << std::endl;
+        std::cerr << "SDK client run failed with code " << static_cast<int>(t_Result) << std::endl;
     }
 }
 /*
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     TPCANHandle handles[] = { PCAN_USBBUS1, PCAN_USBBUS2 };
     TPCANBaudrate baudrate = PCAN_BAUD_1M;
     const int deviceCount = sizeof(handles) / sizeof(handles[0]);
-    bool initialized[deviceCount] = { false };
+    bool pcan_initialized[deviceCount] = { false };
 	int sucscessfulInits = 0;
 
     for (int i = 0; i < deviceCount; ++i) {
@@ -80,53 +80,63 @@ int main(int argc, char* argv[])
         TPCANStatus result = pcan->Initialize(handle, baudrate);
 
         if (result == PCAN_ERROR_OK) {
-            initialized[i] = true;
+            pcan_initialized[i] = true;
 			sucscessfulInits++;
         }
         else {
             pcan->Uninitialize(handle); // 清理失败的通道
         }
     }
-	std::cout << "Successfully initialized " << sucscessfulInits << " PCAN devices." << std::endl;
-	std::cout << initialized[0] << initialized[1] << std::endl;
-	//Sleep(1500);
+	std::cout << std::endl << "Successfully initialized " << sucscessfulInits << " PCAN devices." << std::endl;
+	std::cout << pcan_initialized[0] << pcan_initialized[1] << std::endl;
 
+    std::thread sdkclient_thread(SDKThread, sdk_client); Sleep(100);
+    // 将 SDK 线程与主线程分离，允许其在后台独立运行
+    sdkclient_thread.detach();
+    std::cout << "SDK Client thread detached." << std::endl;
 
-    // 电机控制器初始化
-    if (!initialized[0]) {
-        std::cout << "no pcan devices!" << std::endl;
-		Sleep(3000);
-        exit(0);
+	// 电机控制器初始化
+	int loaded_skeletons = 0;
+    MotorController* controller_1 = nullptr; 
+    MotorController* controller_2 = nullptr;
+	sdk_client->LoadSkeleton(Side::Side_Left); Sleep(100); //等待骨骼加载
+    if (pcan_initialized[0] && sdk_client->GetSkeletonCount() > 0) {
+		controller_1 = new MotorController(pcan, handles[0], sdk_client, true);
+		loaded_skeletons++;
+		std::cout << "Left controller initialized." << std::endl;
     }
-
-    MotorController* left_controller = new MotorController(pcan, handles[0], sdk_client, true);
-    MotorController* right_controller = nullptr;
-    if (initialized[1]) {
-        right_controller = new MotorController(pcan, handles[1], sdk_client, false);
+    sdk_client->LoadSkeleton(Side::Side_Right); Sleep(100);
+    if (pcan_initialized[1] && sdk_client->GetSkeletonCount() > loaded_skeletons) {
+        controller_2 = new MotorController(pcan, handles[1], sdk_client, false);
+		loaded_skeletons++;
+		std::cout << "Right controller initialized." << std::endl;
     }
+	std::cout << "Loaded " << loaded_skeletons << " hand skeletons." << std::endl;
+
     // 数据记录器初始化
-    Recorder* recorder = new Recorder(left_controller);
+    Recorder* recorder = new Recorder(controller_1);
+	std::cout << "Recorder initialized." << std::endl;
 
     // 图形界面初始化
-    GraphicInteractor* interactor = new GraphicInteractor(left_controller,right_controller, recorder);
+    GraphicInteractor* interactor = new GraphicInteractor(controller_1, controller_2, recorder);
+	std::cout << "Graphic interactor initialized." << std::endl;
     
-    // 线程启动
-    std::thread sdkclient_thread(SDKThread, sdk_client);
-    std::thread left_controller_thread(CtrlThread, left_controller);
-    std::thread right_controller_thread;
-    if (right_controller) right_controller_thread = std::thread(CtrlThread, right_controller);
+
+    std::thread controller_1_thread;
+	if (controller_1) controller_1_thread = std::thread(CtrlThread, controller_1);
+    std::thread controller_2_thread;
+    if (controller_2) controller_2_thread = std::thread(CtrlThread, controller_2);
     std::thread interactor_thread(GraphThread, interactor);
     std::thread recorder_thread(RecorderThread, recorder);
 
-    // 将手套客户端线程与主线程绑定，其他线程各自运行
-    sdkclient_thread.join();
+	if (controller_1_thread.joinable()) controller_1_thread.detach();
+    if (controller_2_thread.joinable()) controller_2_thread.detach();
     interactor_thread.detach();
-    left_controller_thread.detach();
-    if (right_controller_thread.joinable()) right_controller_thread.detach();
     recorder_thread.detach();
 
-    if (right_controller) delete right_controller;
-    delete left_controller;
+    while (true)Sleep(1000);
+    if (controller_2) delete controller_2;
+    if (controller_1) delete controller_1;
     delete interactor;
     delete recorder;
     delete sdk_client;
