@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                // 从你的编译命令中提取的包含路径
+                "${workspaceFolder}/ManusSDK/include",
+                "${workspaceFolder}/PlatformSpecific",
+                "${workspaceFolder}/PlatformSpecific/Windows",
+                "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\VS\\include",
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_UNICODE",
+                "UNICODE",
+                "NDEBUG"
+            ],
+            "windowsSdkVersion": "10.0.19041.0", // 你可以根据你安装的Windows SDK版本修改
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.38.33130/bin/Hostx64/x64/cl.exe", // ！！！请务必检查并修改为你的 cl.exe 实际路径
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

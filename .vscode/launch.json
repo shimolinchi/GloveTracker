@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Build Release (GloveTracker)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            // 程序路径必须和 tasks.json 中的 /Fe 输出路径完全一致
+            "program": "${workspaceFolder}\\Output\\x64\\Release\\GloveTracker.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            // 在启动调试前，自动执行我们定义好的构建任务
+            "preLaunchTask": "Build Release (GloveTracker)"
+        }
+    ]
+}

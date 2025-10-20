@@ -3876,7 +3876,7 @@ ErgonomicsData SDKClient::GetGloveErgoData(bool is_left)
 
 ClientSkeletonCollection* SDKClient::GetCurrentSkeleton() {
 	std::lock_guard<std::mutex> lock(m_SkeletonMutex);
-	return m_NextSkeleton;
+	return m_Skeleton;
 }
 
 void SDKClient::LoadSkeleton(Side p_side) {

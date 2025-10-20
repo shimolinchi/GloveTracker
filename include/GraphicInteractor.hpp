@@ -44,6 +44,10 @@ private:
     std::vector<int> right_position_drive;
     PanelState state;
 
+    int button_width ;
+    int button_height ;
+    int button_spacing ;
+
 public:
     GraphicInteractor( MotorController* controller1, MotorController* controller2, Recorder* recorder);
     ~GraphicInteractor();

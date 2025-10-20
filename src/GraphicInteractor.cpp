@@ -15,7 +15,10 @@ GraphicInteractor::GraphicInteractor(MotorController* controller1, MotorControll
 	right_position_drive(16, 0),
 	right_position_now(16, 0),
 	right_velocity_drive(16, 0),
-	right_velocity_now(16, 0)
+	right_velocity_now(16, 0),
+    button_height(60),
+    button_spacing(85),
+    button_width(250)
 {
 }
 
@@ -31,14 +34,14 @@ void GraphicInteractor::Init() {
 }
 
 void GraphicInteractor::UpdateData() {
-    if (controller1 != nullptr) {
+    if(controller1 != nullptr) {
         left_hand_data = controller1->client->GetGloveErgoData(true);
-
         left_velocity_now = controller1->velocity_now;
         left_velocity_drive = controller1->velocity_drive;
         left_position_now = controller1->position_now;
         left_position_drive = controller1->position_drive;
     }
+
 
     if (controller2 != nullptr) {
         right_hand_data = controller2->client->GetGloveErgoData(false);
@@ -550,13 +553,14 @@ void GraphicInteractor::Recording() {
     int winW  = getwidth();           
     int winH  = getheight();
 
-    int startY = 180;
-    int spacing   = 70;
-    int btnWidth  = 300;
-    int btnHeight = 50;
-    int btnX1 = (winW - btnWidth) / 2;
-    int btnX2 = btnX1 + btnWidth;
-
+    int start_y = 180;
+    int btnX1 = (winW - button_width) / 2;
+    int btnX2 = btnX1 + button_width;
+    if (controller1 == nullptr) {
+        outtextxy(50, winH - 100, _T("No gloves connected!"));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        return;
+    }
     while (true) {
         cleardevice();
         DrawTitle(_T("Recording Options"));
@@ -576,17 +580,17 @@ void GraphicInteractor::Recording() {
         } else {
             mouse.x = mouse.y = 0;
         }
+        int y = start_y;
 
         // 按钮 hover 检测
-        bool hoverStartRec  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY && mouse.y <= startY + btnHeight);
-        bool hoverStopRec   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing && mouse.y <= startY + spacing + btnHeight);
-        bool hoverRecOnce   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*2 && mouse.y <= startY + spacing*2 + btnHeight);
-        bool hoverInputFreq = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= startY + spacing*3 && mouse.y <= startY + spacing*3 + btnHeight);
-
-        DrawButton(btnX1, startY,               btnX2, startY + btnHeight,           _T("Start Recording"), hoverStartRec);
-        DrawButton(btnX1, startY + spacing,     btnX2, startY + spacing + btnHeight, _T("Stop Recording"),  hoverStopRec);
-        DrawButton(btnX1, startY + spacing*2,   btnX2, startY + spacing*2 + btnHeight,_T("Record Once"),     hoverRecOnce);
-        DrawButton(btnX1, startY + spacing*3,   btnX2, startY + spacing*3 + btnHeight,_T("Set Frequency"),   hoverInputFreq);
+        bool hoverStartRec  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Start Recording"), hoverStartRec); y += button_spacing;
+        bool hoverStopRec   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Stop Recording"),  hoverStopRec); y += button_spacing;
+        bool hoverRecOnce   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y+ button_height);
+        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Record Once"),     hoverRecOnce); y += button_spacing;
+        bool hoverInputFreq = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Set Frequency"),   hoverInputFreq); y += button_spacing;
 
         if (MouseHit()) {
             MOUSEMSG msg = GetMouseMsg();
@@ -644,17 +648,16 @@ void GraphicInteractor::Run() {
     BeginBatchDraw();  // 开启双缓冲
     int winW  = getwidth();
     int winH  = getheight();
+    while (controller1 == nullptr) {
+        std::cout << "Waiting for gloves..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
     while (running) {
 
         UpdateData();
         cleardevice();
-
-        // 绘制标题
-
-        //DrawTitle();
-
         int data_start_y = 120;
-        if (controller1 != nullptr && controller1->calibrating_process == CalibrateProcess::START){
+        if (controller1->calibrating_process == CalibrateProcess::START){
             StartCalibrate();
         }
 
@@ -665,13 +668,10 @@ void GraphicInteractor::Run() {
             DrawTitle(_T("Main Manu"));
 
             // 窗口宽度
-            int btnWidth  = 300;
-            int btnHeight = 50;
-            int spacing   = 70;
             int start_y    = 180;   // 第一个按钮纵向位置中心
 
-            int btnX1 = (winW - btnWidth) / 2;
-            int btnX2 = btnX1 + btnWidth;
+            int btnX1 = (winW - button_width) / 2;
+            int btnX2 = btnX1 + button_width;
 
             // 获取鼠标位置
             POINT mouse;
@@ -679,24 +679,24 @@ void GraphicInteractor::Run() {
             ScreenToClient(GetHWnd(), &mouse);
             int y = start_y;
 
-            bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y,                 btnX2, y + btnHeight,         _T("Glove Data"), hoverGlove);
-			y += spacing;
-            bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y,       btnX2, y + btnHeight,_T("Motor Data"), hoverMotor);
-            y += spacing;
-            bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Calibrate"), hoverCalibrate);
-            y += spacing;
-            bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Recording"), hoverRecording);
-            y += spacing;
-            bool hoverExchanging = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y, btnX2, y + btnHeight, _T("Exchange Hand"), hoverExchanging);
-            y += spacing;
-            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + btnHeight);
-            DrawButton(btnX1, y,    btnX2, y + btnHeight,_T("Exit Program"), hoverExit);
-            y += spacing;
+            bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,                 btnX2, y + button_height,         _T("Glove Data"), hoverGlove);
+			y += button_spacing;
+            bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,       btnX2, y + button_height,_T("Motor Data"), hoverMotor);
+            y += button_spacing;
+            bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Calibrate"), hoverCalibrate);
+            y += button_spacing;
+            bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Recording"), hoverRecording);
+            y += button_spacing;
+            bool hoverExchanging = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y, btnX2, y + button_height, _T("Exchange Hand"), hoverExchanging);
+            y += button_spacing;
+            bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Exit Program"), hoverExit);
+            y += button_spacing;
 
 
             // 鼠标点击检测
@@ -749,7 +749,7 @@ void GraphicInteractor::Run() {
         }
         // ===== 退出程序 =====
         else if (state == PanelState::EXIT) {
-            exit(0); 
+            TerminateProcess(GetCurrentProcess(), 0);
         }
 
         FlushBatchDraw();

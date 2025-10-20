@@ -1,0 +1,89 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Release (GloveTracker)",
+            "type": "shell",
+            "command": "cl.exe",
+            "args": [
+                // ============== 编译器选项 (大部分来自你的命令) ==============
+                "/MP",                      // 多进程编译，加快速度
+                "/GS",                      // 检查缓冲区安全
+                "/Gy",                      // 启用函数级链接
+                "/W3",                      // 警告等级 3
+                "/wd4005",                  // 禁用特定警告 (宏重定义)
+                "/wd4099",                  // (找不到 PDB)
+                "/wd4244",                  // (类型转换可能丢失数据)
+                "/wd4267",                  // (size_t 到 int 的转换)
+                "/wd4996",                  // (弃用的函数)
+                "/wd26812",                 // (枚举类型作用域)
+                "/Zc:wchar_t",              // 将 wchar_t 视为内置类型
+                "/Zi",                      // 生成完整的调试信息
+                "/Gm-",                     // 禁用最小重新生成
+                "/Ox",                      // 完全优化
+                "/Zc:inline",               // 移除未引用的 COMDAT
+                "/fp:precise",              // 精确的浮点模型
+                "/GF",                      // 消除重复字符串
+                "/WX-",                     // 不将警告视为错误
+                "/Zc:forScope",             // 强制 for 循环范围的标准行为
+                "/arch:AVX",                // 使用 AVX 指令集
+                "/Gd",                      // __cdecl 调用约定
+                "/Oi",                      // 生成内部函数
+                "/MD",                      // 使用多线程 DLL 运行时库
+                "/std:c++17",               // 使用 C++17 标准
+                "/EHsc",                    // 启用 C++ 异常处理
+                "/nologo",                  // 禁止显示启动版权标志
+                "/FC",                      // 在诊断消息中使用完整路径
+
+                // ============== 预处理器定义 ==============
+                "/D", "_UNICODE",
+                "/D", "UNICODE",
+                "/D", "NDEBUG",             // 为Release构建添加此项
+
+                // ============== 包含目录 (Include Paths) ==============
+                "/I", "ManusSDK\\include",
+                "/I", "PlatformSpecific",
+                "/I", "PlatformSpecific\\Windows",
+                "/I", "..\\Externals",
+                "/I", "${workspaceFolder}\\include",
+                "/I", "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\VS\\include",
+
+                // ============== 输出文件设置 ==============
+                "/Fd${workspaceFolder}\\Temp\\{9F01F8C2-DB01-407B-8256-1A63F8FB672C}\\x64\\Release\\vc143.pdb", // PDB 数据库文件路径
+                "/Fo${workspaceFolder}\\Temp\\{9F01F8C2-DB01-407B-8256-1A63F8FB672C}\\x64\\Release\\",          // .obj 目标文件输出目录
+                "/Fe${workspaceFolder}\\Output\\x64\\Release\\GloveTracker.exe", // 最终可执行文件路径和名称
+
+                // ============== 要编译的源文件 ==============
+                // 使用通配符编译项目根目录下所有的 .cpp 文件。
+                // 如果你的源文件在 src 文件夹中, 请改为 "${workspaceFolder}\\src\\*.cpp"
+                "${workspaceFolder}\\src\\*.cpp",
+                "${workspaceFolder}\\Main.cpp",
+                "${workspaceFolder}\\PlatformSpecific\\Windows\\*.cpp",
+
+                // ============== 链接器选项 ==============
+                "/link",
+
+                "/LIBPATH:ManusSDK\\lib" ,
+                "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.44.35207\\lib\\x64\\EasyXw.lib",
+                "ManusSDK.lib",  
+                "user32.lib",
+                "gdi32.lib",
+                "Ole32.lib",
+                "Shell32.lib",
+            ],
+            "options": {
+                // 确保在开发者命令提示符环境下运行
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "clear": true
+            },
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

@@ -31,10 +31,23 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
     spread_coeff_neg({0.4f, 0.4f, 0.4f, 0.4f}),
     spread_coeff_pos({0.4f, 0.4f, 0.4f, 0.5f}),
 	tip_distances(4, 100.0f),
-    pointing_motor_position({{ 2091, 1477, 2965, 1248, 1248, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2546 },
-                            { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2224, 0, 0, 0, 0, 0, 0, 3145 },
-                            { 2303, 2369, 2526, 0, 0, 0, 0, 0, 0, 1161, 1161, 2062, 0, 0, 0, 3910 },
-                            { 1245, 2185, 2462, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
+    pointing_motor_position({{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
+                            { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
+                            { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
+                            { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }}),
+
+
+    // 比赛特制动作，食指无名指对大拇指
+    // pointing_motor_position({{ 1645, 1911, 2997, 1567, 1159, 2108, 1128, 1598, 2574, 0, 0, 0, 0, 0, 0, 2397  },
+    //                         { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2200, 0, 0, 0, 0, 0, 0, 3145 },
+    //                         { 2303, 2369, 2480, 0, 0, 0, 0, 0, 0, 1161, 1161, 2030, 0, 0, 0, 3940 },
+    //                         { 1245, 2185, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
+    second_pointing_motor_position({{ 3700, 3700, 850, 1, 1, 2100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },
+                                    { 3800, 3800, 850 ,0 ,0, 0, 1, 1, 2500, 0, 0, 0, 0, 0, 0, 3145 },
+                                    { 3700, 3700, 850, 0, 0, 0, 0, 0, 0, 1, 1, 2200, 0, 0, 0, 3910 },
+                                    { 3600, 3900, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2100, 4095 }})
+                                   
+
     {
     }
 
@@ -123,9 +136,15 @@ void MotorController::PointingOptimize() {
     std::vector<float> pointing_motor_position_norm(16);
     int closest_tip_index = std::distance(tip_distances.begin(),std::min_element(tip_distances.begin(), tip_distances.end()));
     float closest_tip_distance = tip_distances[closest_tip_index];
+    float mcp_stretch_norm = (position_norm[3 + closest_tip_index * 3] + position_norm[4 + closest_tip_index * 3]) / 2.0f;
+    mcp_stretch_norm = LinearMap(mcp_stretch_norm, 0.0f, (pointing_motor_position[closest_tip_index][closest_tip_index * 3 + 3] / 4096.0f), 0.0f, 1.0f); // 二次曲线加强效果
+    mcp_stretch_norm = std::clamp(mcp_stretch_norm, 0.0f, 1.0f);
+
 
     for (size_t i = 0; i < 16; i++) {
-        pointing_motor_position_norm[i] = pointing_motor_position[closest_tip_index][i] / 4096.0f;
+        // pointing_motor_position_norm[i] = pointing_motor_position[closest_tip_index][i] / 4096.0f;
+        pointing_motor_position_norm[i] = mcp_stretch_norm * pointing_motor_position[closest_tip_index][i] / 4096.0f + 
+        (1.0f - mcp_stretch_norm) * second_pointing_motor_position[closest_tip_index][i] / 4096.0f;
 	}
 
     if (tip_distances[closest_tip_index] < 1e-6) {
