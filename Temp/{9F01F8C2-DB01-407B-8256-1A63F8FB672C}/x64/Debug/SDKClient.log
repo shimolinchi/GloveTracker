@@ -1,3 +1,0 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(538,5): warning MSB8028: 中间目录(C:\Users\22261\OneDrive\文档\Project\GloveTracker\Temp\{9F01F8C2-DB01-407B-8256-1A63F8FB672C}\x64\Debug\)包含从另一个项目(SDKClient_Windows.vcxproj)共享的文件。   这会导致错误的清除和重新生成行为。
-  SDKClient.vcxproj -> C:\Users\22261\OneDrive\文档\Project\GloveTracker\Output\x64\Debug\GloveTracker.exe
-  已复制         1 个文件。
