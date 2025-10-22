@@ -1,11 +1,9 @@
-#include "stdafx.h"
 #include "MotorController.hpp"
-#include <iostream>
 
 // --- 初始化所有静态常量 ---
 std::vector<float> MotorController::thumb_ip_limit = { 0.0f, 65.0f };
-std::vector<std::vector<float>> MotorController::dip_limit = {{ 0.0f, 65.0f },{ 0.0f, 65.0f },{ 0.0f, 65.0f },{ 0.0f, 65.0f }};
-std::vector<std::vector<float>> MotorController::pip_limit = {{ 0.0f, 100.0f },{ 0.0f, 100.0f },{ 0.0f, 100.0f },{ 0.0f, 100.0f }};
+std::vector<std::vector<float>> MotorController::dip_limit = {{ 0.0f, 69.0f },{ 0.0f, 69.0f },{ 0.0f, 69.0f },{ 0.0f, 69.0f }};
+std::vector<std::vector<float>> MotorController::pip_limit = {{ 0.0f, 109.0f },{ 0.0f, 109.0f },{ 0.0f, 109.0f },{ 0.0f, 109.0f }};
 std::vector<std::vector<float>> MotorController::mcp_stretch_limit = { {0.0f, 75.0f}, {0.0f, 90.0f}, {0.0f, 75.0f}, {0.0f, 80.0f} };
 std::vector<float> MotorController::thumb_mcp_limit = { 0.0f, 70.0f };
 std::vector<float> MotorController::thumb_cmc_stretch_limit = { 48.0f, 32.0f };
@@ -30,25 +28,93 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
     spread_limit    ({18.0f, 15.0f, 15.0f, 18.0f}),
     spread_coeff_neg({0.4f, 0.4f, 0.4f, 0.4f}),
     spread_coeff_pos({0.4f, 0.4f, 0.4f, 0.5f}),
-	tip_distances(4, 100.0f),
-    pointing_motor_position({{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
-                            { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
-                            { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
-                            { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }}),
+	tip_distances(4, 100.0f)
+    // pointing_motor_position(        {{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
+    //                                 { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
+    //                                 { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
+    //                                 { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }}),
+    // second_pointing_motor_position({{ 3600, 3600, 1000, 1, 1, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },
+    //                                 { 3800, 3800, 850 ,0 ,0, 0, 1, 1, 2500, 0, 0, 0, 0, 0, 0, 3145 },
+    //                                 { 3700, 3700, 850, 0, 0, 0, 0, 0, 0, 1, 1, 2200, 0, 0, 0, 3910 },
+    //                                 { 3600, 3900, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2100, 4095 }})
 
-    // 比赛特制动作，食指无名指对大拇指
-    // pointing_motor_position({{ 1645, 1911, 2997, 1567, 1159, 2108, 1128, 1598, 2574, 0, 0, 0, 0, 0, 0, 2397  },
-    //                         { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2200, 0, 0, 0, 0, 0, 0, 3145 },
-    //                         { 2303, 2369, 2480, 0, 0, 0, 0, 0, 0, 1161, 1161, 2030, 0, 0, 0, 3940 },
-    //                         { 1245, 2185, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
-    second_pointing_motor_position({{ 3600, 3600, 1000, 1, 1, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },
-                                    { 3800, 3800, 850 ,0 ,0, 0, 1, 1, 2500, 0, 0, 0, 0, 0, 0, 3145 },
-                                    { 3700, 3700, 850, 0, 0, 0, 0, 0, 0, 1, 1, 2200, 0, 0, 0, 3910 },
-                                    { 3600, 3900, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2100, 4095 }})
+    // 比赛特制动作，食指与无名指同时对大拇指
+    // pointing_motor_position(        {{1645, 1911, 2997, 1567, 1159, 2108, 1128, 1598, 2574, 0, 0, 0, 0, 0, 0, 2397  },
+    //                                 { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2200, 0, 0, 0, 0, 0, 0, 3145 },
+    //                                 { 2303, 2369, 2480, 0, 0, 0, 0, 0, 0, 1161, 1161, 2030, 0, 0, 0, 3940 },
+    //                                 { 1245, 2185, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }}),
+    // second_pointing_motor_position({{ 1645, 1911, 2997, 1567, 1159, 2108, 1128, 1598, 2574, 0, 0, 0, 0, 0, 0, 2397  },
+    //                                 { 2179, 2179, 2264 ,0 ,0, 0, 1482, 1482, 2200, 0, 0, 0, 0, 0, 0, 3145 },
+    //                                 { 2303, 2369, 2480, 0, 0, 0, 0, 0, 0, 1161, 1161, 2030, 0, 0, 0, 3940 },
+    //                                 { 1245, 2185, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1299, 1299, 1798, 4095 }})
                                    
 
-    {
+{
+    /**
+     * @brief 解析一行包含空格和/或逗号分隔的整数的字符串
+     */
+    auto ParseLine = [](std::string line) {
+        std::vector<int> row;
+        std::replace(line.begin(), line.end(), ',', ' '); // 将所有逗号替换为空格
+        std::stringstream ss(line);
+        int value;
+        while (ss >> value) { // std::stringstream 会自动处理多个空格
+            row.push_back(value);
+        }
+        return row;
+    };
+
+    const std::string filename = "pointing_motor_positions.txt";
+
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "无法打开位置配置文件: " << filename << std::endl;    
+        pointing_motor_position =       {{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
+                                        { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
+                                        { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
+                                        { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }};
+        second_pointing_motor_position = {{ 3600, 3600, 1000, 1, 1, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },
+                                        { 3800, 3800, 850 ,0 ,0, 0, 1, 1, 2500, 0, 0, 0, 0, 0, 0, 3145 },
+                                        { 3700, 3700, 850, 0, 0, 0, 0, 0, 0, 1, 1, 2200, 0, 0, 0, 3910 },
+                                        { 3600, 3900, 850, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2100, 4095 }};
+        return;
     }
+
+    std::string line;
+    std::vector<std::vector<int>>* current_target_vector = nullptr;
+    int lines_to_read = 0;
+
+    while (std::getline(file, line)) {
+        // (可选) 清理行首和行尾的空白字符
+        line.erase(0, line.find_first_not_of(" \t\n\r\f\v"));
+        line.erase(line.find_last_not_of(" \t\n\r\f\v") + 1);
+
+        // 跳过空行或注释行
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        // 状态机：检查变量名
+        if (line == "pointing_motor_position") {
+            current_target_vector = &pointing_motor_position;
+            current_target_vector->clear(); // 清空旧数据
+            lines_to_read = 4;
+        } else if (line == "second_pointing_motor_position") {
+            current_target_vector = &second_pointing_motor_position;
+            current_target_vector->clear(); // 清空旧数据
+            lines_to_read = 4;
+        } else if (current_target_vector != nullptr && lines_to_read > 0) {
+            // 如果我们正在读取一个变量，解析该行
+            current_target_vector->push_back(ParseLine(line));
+            lines_to_read--;
+            if (lines_to_read == 0) {
+                current_target_vector = nullptr; // 完成该变量的读取
+            }
+        }
+    }
+
+    std::cout << "From " << filename << " loaded pointing motor position " << std::endl;
+}
 
 void MotorController::UpdateTipDistance() {
 
@@ -73,6 +139,14 @@ void MotorController::UpdateTipDistance() {
 
 void MotorController::ChangeGloveHandSide() {
     hand_side = !hand_side;
+}
+
+void MotorController::SetPointingPosition(int finger_index, int motor_index, int position) {
+    pointing_motor_position[finger_index][motor_index] = position;
+}
+
+int MotorController::GetPointingPosition(int finger_index, int motor_index) {
+    return pointing_motor_position[finger_index][motor_index];
 }
 
 /**
@@ -171,24 +245,75 @@ void MotorController::Calibrate() {
 
     int sampleCount = 0;
     std::vector<float> sum = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 前四个用于四指侧摆零点，第四到八个用于pip零点，第九到十二个用于dip零点， 第十三个个用于大拇指侧摆零点
-    while(calibrating_process != CalibrateProcess::STEP1) {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
+    while (calibrating_process != CalibrateProcess::STEP1) {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
     while (calibrating_process == CalibrateProcess::STEP1) {
+        glove_data = client->GetGloveErgoData(hand_side);
         for(int i = 0; i < 4; i++){
-            sum[i] += glove_data.data[i * 4 + 4];
-            sum[i + 4] += glove_data.data[i * 4 + 7];
-            sum[i + 8] += glove_data.data[i * 4 + 6];
+            sum[i]     += glove_data.data[i * 4 + 4];
+            sum[i + 4] += glove_data.data[i * 4 + 6];
+            sum[i + 8] += glove_data.data[i * 4 + 7];
         }
         sum[12] += glove_data.data[0];
         sampleCount++;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
+    float validation_threshold = 10.0f;
     for(int i = 0; i < 4; i++){
-        mcp_spread_zero_position[i] = sum[i] / sampleCount;
-        pip_limit[i][0] = sum[i + 8] / sampleCount + 2.0f;
-        dip_limit[i][0] = sum[i + 4] / sampleCount + 2.0f;
+        float temp_mcp_spread_zero = sum[i] / sampleCount;
+        if (abs(temp_mcp_spread_zero - mcp_spread_zero_position[i]) < validation_threshold ) {
+            mcp_spread_zero_position[i] = temp_mcp_spread_zero;
+        }
+        float temp_pip_zero = sum[i + 4] / sampleCount;
+        if (abs(temp_pip_zero - pip_limit[i][0] + 2.0f) < validation_threshold ) {
+            pip_limit[i][0] = temp_pip_zero + 2.0f;
+        }
+        float temp_dip_zero = sum[i + 8] / sampleCount;
+        if (abs(temp_dip_zero - dip_limit[i][0] + 2.0f) < validation_threshold ) {
+            dip_limit[i][0] = temp_dip_zero + 2.0f;
+        }
     }
-    thumb_cmc_spread_limit[0] = sum[12] / sampleCount;
+    float temp_thumb_cmc_spread_zero = sum[12] / sampleCount;
+    if (abs(temp_thumb_cmc_spread_zero - thumb_cmc_spread_limit[0]) < validation_threshold ) {
+        thumb_cmc_spread_limit[0] = temp_thumb_cmc_spread_zero;
+    }
+
+    sampleCount = 0;
+    while (calibrating_process != CalibrateProcess::STEP2) {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
+    std::vector<float> sum_ = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 前四个用于四指mcp弯曲零点，第四到八个用于pip零点，第九到十二个用于dip零点
+    std::vector<float> stand_limit = {75.0f, 90.0f, 75.0f, 80.0f, 109.0f, 109.0f, 109.0f, 109.0f, 69.0f, 69.0f, 69.0f, 69.0f};
+    while (calibrating_process == CalibrateProcess::STEP2) {
+        glove_data = client->GetGloveErgoData(hand_side);
+        for(int i = 0; i < 4; i++){
+            sum_[i]     += glove_data.data[i * 4 + 5];
+            sum_[i + 4] += glove_data.data[i * 4 + 6];
+            sum_[i + 8] += glove_data.data[i * 4 + 7];
+        }
+        sampleCount++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+    for (int i = 0; i < 4; i++) {
+        float temp_mcp_limit = sum_[i] / sampleCount;
+        if (abs(temp_mcp_limit - stand_limit[i]) < validation_threshold ) {
+            mcp_stretch_limit[i][1] = temp_mcp_limit;
+        } 
+
+        float temp_pip_limit = sum_[i + 4] / sampleCount;
+        if (abs(temp_pip_limit - stand_limit[i + 4]) < validation_threshold ) {
+            pip_limit[i][1] = temp_pip_limit;
+        }
+        float temp_dip_limit = sum_[i + 8] / sampleCount;
+        if (abs(temp_dip_limit - stand_limit[i + 8]) < validation_threshold ) {
+            dip_limit[i][1] = temp_dip_limit;
+        }
+    }
+
+    
+    std::cout << "Calibration finished. New limits:" << std::endl;
+    for (int i = 0; i < 4; i++) {
+        std::cout << " MCP Spread Zero: " << mcp_spread_zero_position[i] << ", MCP Limit: [" << mcp_stretch_limit[i][0] << ", " << mcp_stretch_limit[i][1] << "], PIP Limit: [" << pip_limit[i][0] << ", " << pip_limit[i][1] << "], DIP Limit: [" << dip_limit[i][0] << ", " << dip_limit[i][1] << "]" << std::endl;
+    }
 }
 
 

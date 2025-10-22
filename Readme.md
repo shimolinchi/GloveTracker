@@ -8,11 +8,15 @@
 
 ## 使用说明
 
-** 须在windows系统下使用 **
+**须在windows系统下使用**
 
 下载项目的release文件中的 GloveTracker.exe 与 ManusSDK.dll 放于同一目录下，连接好灵巧手。启动 manus core 程序,[manus core 下载位置](https://docs.manus-meta.com/latest/Resources/)，推荐3.0.1版本，连接并配置好用户数据后，按要求进行手套校准。
 
-启动GloveTracker.exe程序，若映射不准，按下Calibrate按键后，按照提示进行校准。校准的机制是记录每个手指的侧摆、pip与dip关节弯曲零点
+启动GloveTracker.exe程序，若映射不准，按下Calibrate按键后，按照提示进行校准。校准的机制是记录每个手指的侧摆、pip与dip关节弯曲零点。
+
+此外，校准的时候第一步尽量保持四根手指水平伸直，四根手指可以有一点缝隙（这样可以展示向内侧摆），如果完全并拢则无法向中间侧摆。校准第二阶段需要确保四根手指的关节尽可能弯曲到最大值，这样才能保证角度行程采样正确。
+
+
 
 ## 主要功能
 
@@ -56,10 +60,10 @@
 3. 配置好 include/lib 路径，编译生成可执行文件。
 4. 运行调试/发布程序程序将自动启动各线程。
 
-### vscode + cl编译器
+### vscode + cl 编译器
 
 1. 下载并配置好 MicroSoft Visual Studio 环境
-2. 配置好cl环境变量或在 x64 Native Tools Command Prompt for VS 2022 终端中启动vscode
+2. 配置好cl环境变量（[方法见此](https://blog.csdn.net/en_Wency/article/details/124767742)）或在 x64 Native Tools Command Prompt for VS 2022 终端中启动vscode
 3. 检查.vscode文件夹中的tasks.json、launch.json文件（仅提供了release版本）
 4. 运行程序
 

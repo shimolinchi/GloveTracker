@@ -18,12 +18,17 @@ GraphicInteractor::GraphicInteractor(MotorController* controller1, MotorControll
 	right_velocity_now(16, 0),
     button_height(60),
     button_spacing(85),
-    button_width(250)
+    button_width(250),
+    round_radius(20),
+    little_button_width(100),
+    little_button_height(32),
+    little_button_spacing(45),
+    little_round_radius(15)
 {
 }
 
 void GraphicInteractor::Init() {
-    initgraph(1000, 850);  //宽，高
+    initgraph(1000, 900);  //宽，高
     setbkcolor(RGB(30, 30, 30));
     cleardevice();
     settextcolor(WHITE);
@@ -182,9 +187,8 @@ void GraphicInteractor::DisplayingDataMotor(int start_y) {
     y = DisplayData(right_velocity_drive, 550, y);     y += line_space;
 }
 
-void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, LPCTSTR text, bool hover) {
+void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, int round_radius, LPCTSTR text, bool hover) {
     // 圆角半径，可以根据需要调整
-    const int roundRadius = 20;
 
     if (hover) {
         setfillcolor(RGB(57, 127, 155)); // 鼠标悬停时稍微深一点的蓝灰色
@@ -192,12 +196,12 @@ void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, LPC
     else {
         setfillcolor(RGB(57, 155, 127));
     }
-    fillroundrect(left, top, right, bottom, roundRadius, roundRadius);  // 填充圆角矩形
+    fillroundrect(left, top, right, bottom, round_radius, round_radius);  // 填充圆角矩形
 
     // 设置更粗的边框
     setlinestyle(PS_SOLID, 2);  // 2像素宽的实线
     setlinecolor(RGB(100, 100, 100));   // 边框颜色
-    roundrect(left, top, right, bottom, roundRadius, roundRadius);      // 绘制圆角边框
+    roundrect(left, top, right, bottom, round_radius, round_radius);      // 绘制圆角边框
 
     // 恢复默认线宽（1像素），以免影响其他绘图操作
     setlinestyle(PS_SOLID, 1);
@@ -212,19 +216,13 @@ void GraphicInteractor::DrawButton(int left, int top, int right, int bottom, LPC
 void GraphicInteractor::DrawTitle(LPCTSTR text) {
     settextcolor(WHITE);
     settextstyle(32, 0, _T("Consolas"));
-
-    //LPCTSTR text = _T("");
-    //switch (state) {
-    //    case PanelState::MAIN_MENU:   text = _T("Main Menu");   break;
-    //    case PanelState::GLOVE_DATA:  text = _T("Glove Data");  break;
-    //    case PanelState::MOTOR_DATA:  text = _T("Motor Data");  break;
-    //}
-
     int textW = textwidth(text);           // 获取文字宽度
     int winW  = getwidth();                // 窗口宽度
     int x = (winW - textW) / 2;            // 居中计算
     outtextxy(x, 50, text);
-}void GraphicInteractor::StartCalibrate() {
+}
+
+void GraphicInteractor::StartCalibrate() {
     cleardevice();
     settextcolor(WHITE);
     settextstyle(32, 0, _T("Consolas"));
@@ -233,47 +231,78 @@ void GraphicInteractor::DrawTitle(LPCTSTR text) {
     int winH = getheight();
     controller1->calibrating_process = CalibrateProcess::START;
 
-    // ---------------- 加载带透明通道的 PNG 图片 ----------------
-    IMAGE handPostureImg;
-    loadimage(&handPostureImg, _T("hand_posture.png")); // 替换为你的文件名
+    // 加载带透明通道的 PNG 图片
+    IMAGE image_flat;
+    IMAGE image_fist;
+    loadimage(&image_flat, _T("picture/flat.png")); 
+    loadimage(&image_fist, _T("picture/fist.png")); 
 
     // 获取背景色
-    COLORREF bgColor = getbkcolor();
+    COLORREF background_color = getbkcolor();
 
     // 取出原图像像素数据
-    int w = handPostureImg.getwidth();
-    int h = handPostureImg.getheight();
-    DWORD* pSrc = GetImageBuffer(&handPostureImg);
+    int flat_w = image_flat.getwidth();
+    int flat_h = image_flat.getheight();
+    DWORD* flat_src = GetImageBuffer(&image_flat);
+    
+    int fist_w = image_fist.getwidth();
+    int fist_h = image_fist.getheight();
+    DWORD* fist_src = GetImageBuffer(&image_fist);
 
-    // 创建一张新的图片，背景为当前背景色
-    IMAGE handPostureImgBG(w, h);
-    DWORD* pDst = GetImageBuffer(&handPostureImgBG);
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            DWORD c = pSrc[y * w + x];
+    // 创建新的图片，背景为当前背景色
+    IMAGE flat_background_filled(flat_w, flat_h);
+    DWORD* flat_dst = GetImageBuffer(&flat_background_filled);
+    for (int y = 0; y < flat_h; y++) {
+        for (int x = 0; x < flat_w; x++) {
+            DWORD c = flat_src[y * flat_w + x];
             BYTE a = (c >> 24) & 0xFF; // Alpha 通道
             if (a < 128) { // 透明像素 → 背景色
-                pDst[y * w + x] = bgColor;
+                flat_dst[y * flat_w + x] = background_color;
             }
             else {
-                pDst[y * w + x] = c;
+                flat_dst[y * flat_w + x] = c;
+            }
+        }
+    }
+
+    IMAGE fist_background_filled(fist_w, fist_h);
+    DWORD* fist_dst = GetImageBuffer(&fist_background_filled);
+    for (int y = 0; y < fist_h; y++) {
+        for (int x = 0; x < fist_w; x++) {
+            DWORD c = fist_src[y * fist_w + x];
+            BYTE a = (c >> 24) & 0xFF; // Alpha 通道
+            if (a < 128) { // 透明像素 → 背景色
+                fist_dst[y * fist_w + x] = background_color;
+            }
+            else {
+                fist_dst[y * fist_w + x] = c;
             }
         }
     }
 
     // ---------- 手动缩放 ----------
     double scale = 0.6;
-    int newW = static_cast<int>(w * scale);
-    int newH = static_cast<int>(h * scale);
-    IMAGE smallImg(newW, newH);
+    int flat_new_w = static_cast<int>(flat_w * scale);
+    int flat_new_h = static_cast<int>(flat_h * scale);
+    int fist_new_w = static_cast<int>(fist_w * scale);
+    int fist_new_h = static_cast<int>(fist_h * scale);
+    IMAGE flat_small_img(flat_new_w, flat_new_h);
+    IMAGE fist_small_img(fist_new_w, fist_new_h);
 
-    HDC srcDC = GetImageHDC(&handPostureImgBG);
-    HDC dstDC = GetImageHDC(&smallImg);
-    SetStretchBltMode(dstDC, HALFTONE);
-    StretchBlt(dstDC, 0, 0, newW, newH, srcDC, 0, 0, w, h, SRCCOPY);
+    HDC flat_src_DC = GetImageHDC(&flat_background_filled);
+    HDC flat_dst_DC = GetImageHDC(&flat_small_img);
+    HDC fist_src_DC = GetImageHDC(&fist_background_filled);
+    HDC fist_dst_DC = GetImageHDC(&fist_small_img);
 
-    int imgX = (winW - newW) / 2;
-    int imgY = 120;
+    SetStretchBltMode(flat_dst_DC, HALFTONE);
+    StretchBlt(flat_dst_DC, 0, 0, flat_new_w, flat_new_h, flat_src_DC, 0, 0, flat_w, flat_h, SRCCOPY);
+    SetStretchBltMode(fist_dst_DC, HALFTONE);
+    StretchBlt(fist_dst_DC, 0, 0, fist_new_w, fist_new_h, fist_src_DC, 0, 0, fist_w, fist_h, SRCCOPY);
+
+    int flat_img_x = (winW - flat_new_w) / 2;
+    int flat_img_y = 120;
+    int fist_img_x = (winW - fist_new_w) / 2;
+    int fist_img_y = 120;
 
     // ---------- 第一段：3 秒 ----------
     auto start1 = std::chrono::steady_clock::now();
@@ -298,11 +327,11 @@ void GraphicInteractor::DrawTitle(LPCTSTR text) {
         }
 
         TCHAR buf[256];
-        _stprintf_s(buf, _T("Start calibrate in %d seconds, put your hand flat on the table"), remain);
+        _stprintf_s(buf, _T("Start calibrate step [1] in %d seconds, put your hand flat on the table"), remain);
         int textW = textwidth(buf);
         int x = (winW - textW) / 2;
         outtextxy(x, 50, buf);
-        putimage(imgX, imgY, &smallImg);
+        putimage(flat_img_x, flat_img_y, &flat_small_img);
 
         settextstyle(26, 0, _T("Consolas"));
         outtextxy(50, winH - 50, _T("Right click to return..."));
@@ -338,14 +367,90 @@ void GraphicInteractor::DrawTitle(LPCTSTR text) {
         int textW = textwidth(buf);
         int x = (winW - textW) / 2;
         outtextxy(x, 50, buf);
-        putimage(imgX, imgY, &smallImg);
+        putimage(flat_img_x, flat_img_y, &flat_small_img);
 
         settextstyle(26, 0, _T("Consolas"));
         outtextxy(50, winH - 50, _T("Right click to return..."));
 
         FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        // std::cout << "stepping1\n";
     }
+
+        // ---------- 第三段：3 秒 ----------
+    auto start3 = std::chrono::steady_clock::now();
+    while (controller1->calibrating_process == CalibrateProcess::SWITCH) {
+        cleardevice();
+
+        // 检测右键退出
+        if (MouseHit()) {
+            MOUSEMSG m = GetMouseMsg();
+            if (m.uMsg == WM_RBUTTONDOWN) {
+                controller1->calibrating_process = CalibrateProcess::FINISH;
+                return; // 直接退出函数
+            }
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start3).count();
+        int remain = 3 - elapsed;
+        if (remain <= 0) {
+            controller1->calibrating_process = CalibrateProcess::STEP2;
+            break;
+        }
+
+        TCHAR buf[256];
+        _stprintf_s(buf, _T("Start calibrate step [2] in %d seconds, please make a fist"), remain);
+        int textW = textwidth(buf);
+        int x = (winW - textW) / 2;
+        outtextxy(x, 50, buf);
+        putimage(fist_img_x, fist_img_y, &fist_small_img);
+
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("Right click to return..."));
+
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        // std::cout << "switching\n";
+    }
+
+        // ---------- 第四段：3 秒 ----------
+    auto start4 = std::chrono::steady_clock::now();
+    while (controller1->calibrating_process == CalibrateProcess::STEP2) {
+        cleardevice();
+
+        // 检测右键退出
+        if (MouseHit()) {
+            MOUSEMSG m = GetMouseMsg();
+            if (m.uMsg == WM_RBUTTONDOWN) {
+                controller1->calibrating_process = CalibrateProcess::FINISH;
+                return; // 直接退出函数
+            }
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        int elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start4).count();
+        int remain = 3 - elapsed;
+        if (remain <= 0) {
+            controller1->calibrating_process = CalibrateProcess::FINISH;
+            break;
+        }
+
+        TCHAR buf[256];
+        _stprintf_s(buf, _T("Calibrating! Hold this gesture in %d seconds"), remain);
+        int textW = textwidth(buf);
+        int x = (winW - textW) / 2;
+        outtextxy(x, 50, buf);
+        putimage(fist_img_x, fist_img_y, &fist_small_img);
+
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("Right click to return..."));
+
+        FlushBatchDraw();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        // std::cout << "stepping2\n";
+    }
+    std::cout << "finished\n";
 }
 
 
@@ -427,7 +532,7 @@ void GraphicInteractor::RecordOnce() {
     }
 }
 
-int GraphicInteractor::InputNumber() {
+int GraphicInteractor::InputNumber(LPCWSTR text) {
     std::wstring inputStr;
     settextstyle(26, 0, L"Consolas");
     settextcolor(WHITE);
@@ -461,13 +566,12 @@ int GraphicInteractor::InputNumber() {
                 case VK_RETURN:  // Enter 键
                     if (!inputStr.empty()) {
                         try {
-                            return std::stoi(inputStr); // 返回输入的数字
+                            return static_cast<int>(std::stol(inputStr)); // 返回输入的数字
                         } catch (...) {
                             inputStr.clear(); // 输入非法时清空
                         }
                     }
                     break;
-
                 case VK_BACK:  // 退格键
                     if (!inputStr.empty()) {
                         inputStr.pop_back();
@@ -491,7 +595,7 @@ int GraphicInteractor::InputNumber() {
         // 绘制界面
         cleardevice();
 
-        outtextxy(50, 100, L"Input new frequency (Hz), press Enter to confirm");
+        outtextxy(50, 100, text);
 
         if (inputActive) {
             setlinecolor(YELLOW);
@@ -584,13 +688,13 @@ void GraphicInteractor::Recording() {
 
         // 按钮 hover 检测
         bool hoverStartRec  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Start Recording"), hoverStartRec); y += button_spacing;
+        DrawButton(btnX1, y,   btnX2, y + button_height, round_radius, _T("Start Recording"), hoverStartRec); y += button_spacing;
         bool hoverStopRec   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Stop Recording"),  hoverStopRec); y += button_spacing;
+        DrawButton(btnX1, y,   btnX2, y + button_height, round_radius, _T("Stop Recording"),  hoverStopRec); y += button_spacing;
         bool hoverRecOnce   = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y+ button_height);
-        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Record Once"),     hoverRecOnce); y += button_spacing;
+        DrawButton(btnX1, y,   btnX2, y + button_height, round_radius, _T("Record Once"),     hoverRecOnce); y += button_spacing;
         bool hoverInputFreq = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-        DrawButton(btnX1, y,   btnX2, y + button_height, _T("Set Frequency"),   hoverInputFreq); y += button_spacing;
+        DrawButton(btnX1, y,   btnX2, y + button_height, round_radius, _T("Set Frequency"),   hoverInputFreq); y += button_spacing;
 
         if (MouseHit()) {
             MOUSEMSG msg = GetMouseMsg();
@@ -603,7 +707,7 @@ void GraphicInteractor::Recording() {
                     recorder->StopRecording();
                 }
                 else if (hoverInputFreq) {
-                    int freq = InputNumber();
+                    int freq = InputNumber(L"Input new frequency (Hz), press Enter to confirm");
                     recorder->SetFrequency(freq);
                     // 更新频率显示
                     freq_info = "Current frequency: " + std::to_string(freq);
@@ -644,12 +748,86 @@ void GraphicInteractor::ExchangeHand() {
     }
 }
 
+void GraphicInteractor::ChangePointingPosition() {
+    std::vector<std::vector<bool>> hover_input(4, std::vector<bool>(16, false));
+    int winW  = getwidth();
+    int winH  = getheight();
+    int start_y    = 120;   // 第一个按钮纵向位置中心
+    int start_x    = winW / 2 - 2 * (little_button_width + little_button_spacing); // 左侧按钮起始位置
+    while (true) {
+        cleardevice();
+        settextstyle(28, 0, _T("Consolas"));
+        settextcolor(WHITE);
+        DrawTitle(_T("Pointing Position Settings"));
+
+        // 窗口宽度
+
+        // 获取鼠标位置
+        POINT mouse;
+        GetCursorPos(&mouse);
+        ScreenToClient(GetHWnd(), &mouse);
+        int y = start_y;
+        int x = start_x;
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 16; j++) {
+                int button_x1 = x - little_button_width / 2;
+                int button_x2 = button_x1 + little_button_width;
+                hover_input[i][j] = (mouse.x >= button_x1 && mouse.x <= button_x2 && mouse.y >= y && mouse.y <= y + little_button_height);
+                
+                int value = controller1->GetPointingPosition(i, j);
+                std::wstring value_str = std::to_wstring(value);
+                DrawButton(button_x1, y, button_x2, y + little_button_height, little_round_radius, value_str.c_str(), hover_input[i][j]);
+                y += little_button_spacing;
+            }
+            y = start_y;
+            x += little_button_spacing + little_button_width;
+        }
+
+        // 鼠标点击检测
+        if (MouseHit()) {
+            MOUSEMSG msg = GetMouseMsg();
+            if (msg.uMsg == WM_LBUTTONDOWN) {
+                int x = msg.x, y = msg.y;
+                for (int i = 0; i < 4; i++) {
+                    for (int j = 0; j < 16; j++) {
+                        if (hover_input[i][j]) {
+                            int new_value = InputNumber(L"Input new pointing position value (0-255), press Enter to confirm");
+                            if (new_value >= 0 && new_value <= 4095) {
+                                controller1->SetPointingPosition(i, j, static_cast<int>(new_value));
+                            }
+                            else {
+                                std::cout << "Invalid input! Please input a number between 0 and 4095." << std::endl;
+                                cleardevice();
+                                outtextxy(50, winH - 100, _T("Invalid input! Please input a number between 0 and 4095."));
+                                FlushBatchDraw();
+                                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                            }
+                        }
+                    }
+                }
+            }
+            else if (msg.uMsg == WM_RBUTTONDOWN) {
+                return;
+            }
+        }
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("right click back to menu"));
+        FlushBatchDraw();
+    }
+}
+
 void GraphicInteractor::Run() {
     BeginBatchDraw();  // 开启双缓冲
     int winW  = getwidth();
     int winH  = getheight();
     while (controller1 == nullptr) {
-        std::cout << "Waiting for gloves..." << std::endl;
+        std::cout << "Waiting for gloves or pcan..." << std::endl;
+        cleardevice();
+        settextcolor(WHITE);
+        settextstyle(32, 0, _T("Consolas"));
+        outtextxy((winW - textwidth(_T("Waiting for gloves or pcan..."))) / 2, winH / 2, _T("Waiting for gloves or pcan..."));
+        FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
     while (running) {
@@ -680,22 +858,25 @@ void GraphicInteractor::Run() {
             int y = start_y;
 
             bool hoverGlove = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,                 btnX2, y + button_height,         _T("Glove Data"), hoverGlove);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius, _T("Glove Data"), hoverGlove);
 			y += button_spacing;
             bool hoverMotor = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,       btnX2, y + button_height,_T("Motor Data"), hoverMotor);
+            DrawButton(btnX1, y,       btnX2, y + button_height, round_radius,_T("Motor Data"), hoverMotor);
             y += button_spacing;
             bool hoverCalibrate  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Calibrate"), hoverCalibrate);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Calibrate"), hoverCalibrate);
             y += button_spacing;
             bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Recording"), hoverRecording);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Recording"), hoverRecording);
             y += button_spacing;
             bool hoverExchanging = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y, btnX2, y + button_height, _T("Exchange Hand"), hoverExchanging);
+            DrawButton(btnX1, y, btnX2, y + button_height, round_radius, _T("Exchange Hand"), hoverExchanging);
+            y += button_spacing;
+            bool hoverPointing  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Pointing Position"), hoverPointing);
             y += button_spacing;
             bool hoverExit  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,    btnX2, y + button_height,_T("Exit Program"), hoverExit);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Exit Program"), hoverExit);
             y += button_spacing;
 
 
@@ -708,7 +889,8 @@ void GraphicInteractor::Run() {
                     else if (hoverMotor) state = PanelState::MOTOR_DATA;
                     else if (hoverCalibrate)  state = PanelState::CALIBRATE;
                     else if (hoverRecording) state = PanelState::RECORDING;
-                    else if (hoverExchanging) ExchangeHand();
+                    else if (hoverExchanging) state = PanelState::EXCHANGING;
+                    else if (hoverPointing)   state = PanelState::POINTING_POS;
                     else if (hoverExit)  state = PanelState::EXIT;
                 }
             }
@@ -746,6 +928,15 @@ void GraphicInteractor::Run() {
         }
         else if (state == PanelState::RECORDING) {
             Recording();
+        }
+        // ===== 交换手套界面 =====
+        else if (state == PanelState::EXCHANGING) {
+            ExchangeHand();
+            state = PanelState::MAIN_MENU;
+        }
+        else if (state == PanelState::POINTING_POS) {
+            ChangePointingPosition();
+            state = PanelState::MAIN_MENU;
         }
         // ===== 退出程序 =====
         else if (state == PanelState::EXIT) {

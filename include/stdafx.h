@@ -5,11 +5,14 @@
 
 #pragma once
 
-#include "targetver.h"
 
 #include <stdio.h>
 #include <tchar.h>
-
-
-
-// TODO:  在此处引用程序需要的其他头文件
+# include <thread>
+# include <algorithm>
+# include <windows.h>
+# include <graphics.h>   // EasyX
+# include <conio.h>      // kbhit, getch
+# include <mutex>
+# include <string>
+#include "targetver.h"

@@ -1,14 +1,7 @@
+# include "stdafx.h"
 # include "ClientLogging.hpp"
 # include "SDKClient.hpp"
-# include <thread>
-# include <algorithm>
-# include <windows.h>
-# include <graphics.h>   // EasyX
-# include <conio.h>      // kbhit, getch
-# include <mutex>
-# include <string>
 # include "RyHandLib.h"
-# include "stdafx.h"
 # include "PCANBasic.hpp"
 # include "math_utils.hpp"
 # include "MotorController.hpp"

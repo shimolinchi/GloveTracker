@@ -136,20 +136,19 @@ TPCANStatus PCANBasic::GetErrorText(TPCANStatus Error, uint16_t Language, std::s
 }
 
 /**
- * @brief ����һ��CAN��Ϣ
- * @param pcan PCANBasic��������
- * @param PcanHandle PCANͨ�����
- * @param motor_id ���ID
- * @param data Ҫ���͵����ݸ��� (std::vector<uint8_t>)
+ * @brief 发送一条 CAN 信息
+ * @param pcan PCANBasic 对象引用
+ * @param PcanHandle PCAN 通道句柄
+ * @param motor_id 电机 ID
+ * @param data 要发送的数据数组 (std::vector<uint8_t>)
  */
-
 void SendCANMessage(PCANBasic& pcan, TPCANHandle PcanHandle, uint32_t motor_id, const std::vector<uint8_t>& data) {
     TPCANMsg pcan_msg;
     pcan_msg.ID = motor_id;
     pcan_msg.MSGTYPE = PCAN_MESSAGE_STANDARD;
     pcan_msg.LEN = static_cast<uint8_t>(data.size());
 
-    // ȷ�����ݳ��Ȳ�����8�ֽ�
+    // 确保数据长度不超过 8 字节
     if (data.size() > 8) {
         std::cerr << "Error: CAN data length cannot exceed 8 bytes." << std::endl;
         return;
@@ -169,29 +168,29 @@ void SendCANMessage(PCANBasic& pcan, TPCANHandle PcanHandle, uint32_t motor_id, 
 
 
 /**
- * @brief ����Ԥ�趯��
- * @param pcan PCANBasic��������
- * @param PcanHandle PCANͨ�����
- * @param vel_array �ٶ����� (16��Ԫ��)
- * @param pos_array λ������ (16��Ԫ��)
- * @param current_array �������� (16��Ԫ��)
+ * @brief 发送预设动作
+ * @param pcan PCANBasic 对象引用
+ * @param PcanHandle PCAN 通道句柄
+ * @param vel_array 速度数组 (16 个元素)
+ * @param pos_array 位置数组 (16 个元素)
+ * @param current_array 电流数组 (16 个元素)
  */
 void SendAction(PCANBasic& pcan, TPCANHandle PcanHandle, const std::vector<int>& vel_array, const std::vector<int>& pos_array, const std::vector<int>& current_array) {
     for (int i = 0; i < 16; ++i) {
-        uint32_t motor_id = i + 1; // ���ID��1��16
+        uint32_t motor_id = i + 1; // 电机 ID 从 1 到 16
         int speed = vel_array[i];
         int position = pos_array[i];
         int current = current_array[i];
 
-        // ����CAN��Ϣ����: 0xAA������, ���λ�á��ٶȡ�����
+        // 构建 CAN 数据帧: 0xAA 作为帧头，后接位置、速度、电流
         std::vector<uint8_t> data = {
-            0xAA,                                     // ����
-            static_cast<uint8_t>(position & 0xFF),    // λ�õ��ֽ�
-            static_cast<uint8_t>((position >> 8) & 0xFF), // λ�ø��ֽ�
-            static_cast<uint8_t>(speed & 0xFF),       // �ٶȵ��ֽ�
-            static_cast<uint8_t>((speed >> 8) & 0xFF),    // �ٶȸ��ֽ�
-            static_cast<uint8_t>(current & 0xFF),     // �������ֽ�
-            static_cast<uint8_t>((current >> 8) & 0xFF)   // �������ֽ�
+            0xAA,                                     // 帧头
+            static_cast<uint8_t>(position & 0xFF),    // 位置低字节
+            static_cast<uint8_t>((position >> 8) & 0xFF), // 位置高字节
+            static_cast<uint8_t>(speed & 0xFF),       // 速度低字节
+            static_cast<uint8_t>((speed >> 8) & 0xFF),    // 速度高字节
+            static_cast<uint8_t>(current & 0xFF),     // 电流低字节
+            static_cast<uint8_t>((current >> 8) & 0xFF)   // 电流高字节
         };
 
         SendCANMessage(pcan, PcanHandle, motor_id, data);

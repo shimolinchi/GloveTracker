@@ -5,6 +5,9 @@
 # include <thread>
 # include <chrono>
 # include <vector>
+# include <sstream>
+# include <iomanip>
+# include <map>
 # include "SDKClient.hpp"
 # include "MotorController.hpp"
 # include "Recorder.hpp"
@@ -17,6 +20,8 @@ enum class PanelState {
     MOTOR_DATA,
     CALIBRATE,
     RECORDING,
+    EXCHANGING,
+    POINTING_POS,
     EXIT
 };
 
@@ -47,6 +52,12 @@ private:
     int button_width ;
     int button_height ;
     int button_spacing ;
+    int round_radius;
+
+    int little_button_width;
+    int little_button_height;
+    int little_button_spacing;
+    int little_round_radius;
 
 public:
     GraphicInteractor( MotorController* controller1, MotorController* controller2, Recorder* recorder);
@@ -54,15 +65,16 @@ public:
     ClientReturnCode DisplayingDataGlove(int start_y);
     void DisplayingDataMotor(int start_y);
     void DrawTitle(LPCTSTR text);
-    void DrawButton(int left, int top, int right, int bottom, LPCTSTR text, bool hover);
+    void DrawButton(int left, int top, int right, int bottom, int round_radius, LPCTSTR text, bool hover);
     template <typename T>
     void PrintSpecificData(const T& data, int start_y, int start_x = 50);
     void UpdateData();
     void StartCalibrate();
     void RecordOnce();
     void Recording();
-    int InputNumber();
+    int  InputNumber(LPCWSTR text);  
 	void ExchangeHand();
+    void ChangePointingPosition();
     void Init();
     void Run();
 };

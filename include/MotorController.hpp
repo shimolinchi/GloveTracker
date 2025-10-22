@@ -9,6 +9,7 @@
 # include <optional>
 # include <algorithm>
 # include <numeric>
+# include <fstream>
 # include "SDKClient.hpp"
 # include "PCANBasic.hpp"
 # include "RyHandLib.h"
@@ -20,6 +21,8 @@ enum class CalibrateProcess {
     STEP1,
     SWITCH,
     STEP2,
+    STEP3,
+    STEP4,
     FINISH
 };
 
@@ -27,12 +30,12 @@ class MotorController {
 public:
     SDKClient* client;
     std::vector<float> position_norm;
-    std::vector<int> position_now;      // [反馈] 当前电机位置
-    std::vector<int> position_drive;    // [指令] 目标驱动位置
+    std::vector<int> position_now;       // [反馈] 当前电机位置
+    std::vector<int> position_drive;     // [指令] 目标驱动位置
     std::vector<int> velocity_drive;     // [指令] 电机速度
     std::vector<int> current_drive;      // [指令] 电机电流
-    std::vector<int> velocity_now; // [反馈] 当前电机速度
-    std::vector<int> current_now;  // [反馈] 当前电机电流
+    std::vector<int> velocity_now;       // [反馈] 当前电机速度
+    std::vector<int> current_now;        // [反馈] 当前电机电流
     CalibrateProcess calibrating_process;
     ErgonomicsData glove_data;
     ClientSkeleton skeleton;
@@ -40,6 +43,8 @@ public:
 
     MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client, bool hand_side);
     void ChangeGloveHandSide();
+    void SetPointingPosition(int finger_index, int motor_index, int position);
+    int  GetPointingPosition(int finger_index, int motor_index);
     void Run();
 
 private:
@@ -67,8 +72,8 @@ private:
 	float pointing_optimization_strength = 0.012f; // 对指时的优化强度
     std::vector<float> tip_distances; // 四根手指指尖分别与大拇指指尖的距离,单位（米）
     
-    std::vector<std::vector<float>> pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
-    std::vector<std::vector<float>> second_pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
+    std::vector<std::vector<int>> pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
+    std::vector<std::vector<int>> second_pointing_motor_position ; // 对指时电机位置数据，为0表示和对指无关的电机
 
     std::vector<std::vector<float>> pointing_motor_position_norm;  // 对指时电机位置数据,为上变量归一化结果
 

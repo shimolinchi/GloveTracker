@@ -63,7 +63,7 @@ ClientReturnCode SDKClient::Run()
 	{
 		if (m_ConsoleClearTickCount >= 500 || m_State != m_PreviousState)
 		{
-			ClearConsole();
+			// ClearConsole();
 
 			m_ConsoleClearTickCount = 0;
 		}
@@ -3896,7 +3896,7 @@ int SDKClient::GetSkeletonCount() {
 
 //int SDKClient::GetPairedGloveCount() const
 //{
-//	// ��� Landscape �Ƿ���Ч
+//	//     Landscape  Ƿ   Ч
 //	if (!m_Landscape || !m_Landscape->gloveDevices.gloves)
 //	{
 //		ClientLog::warn("Landscape or glove devices data is not initialized.");
@@ -3906,7 +3906,7 @@ int SDKClient::GetSkeletonCount() {
 //	int pairedCount = 0;
 //	for (size_t i = 0; i < m_Landscape->gloveDevices.gloveCount; i++)
 //	{
-//		// ͳ�����з� Unpaired ״̬������
+//		// ͳ     з  Unpaired ״̬      
 //		if (m_Landscape->gloveDevices.gloves[i].pairedState != DevicePairedState_Unpaired)
 //		{
 //			pairedCount++;
