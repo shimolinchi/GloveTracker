@@ -68,9 +68,9 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
 
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "无法打开位置配置文件: " << filename << std::endl;    
+        std::cerr << "Cannot open file: " << filename << std::endl;    
         pointing_motor_position =         {{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
-                                          { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
+                                          { 2230, 2230, 2200 ,0 ,0, 0, 1600, 1150, 2260, 1367, 1571, 1422, 0, 0, 0, 3900 },
                                           { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
                                           { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }};
         second_pointing_motor_position = {{ 3600, 3600, 1000, 1, 1, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },

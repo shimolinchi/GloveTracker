@@ -545,6 +545,8 @@ int GraphicInteractor::InputNumber(LPCWSTR text) {
     int boxX = 50, boxY = 150;
     int boxW = 400, boxH = 40;
 
+    int winH = getheight();
+
     while (true) {
         // 取所有消息（-1 表示不过滤）
         while (peekmessage(&msg, -1, true)) {
@@ -590,6 +592,8 @@ int GraphicInteractor::InputNumber(LPCWSTR text) {
                     }
                 }
                 break;
+            case WM_RBUTTONDOWN:
+                return 999999;
             }
         }
         // 绘制界面
@@ -641,6 +645,8 @@ int GraphicInteractor::InputNumber(LPCWSTR text) {
             outtextxy(boxX, boxY + boxH + 10, L"Click on the input box to activate");
             settextcolor(WHITE);
         }
+        settextstyle(26, 0, _T("Consolas"));
+        outtextxy(50, winH - 50, _T("right click back to menu"));
 
         FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -792,10 +798,11 @@ void GraphicInteractor::ChangePointingPosition() {
                 for (int i = 0; i < 4; i++) {
                     for (int j = 0; j < 16; j++) {
                         if (hover_input[i][j]) {
-                            int new_value = InputNumber(L"Input new pointing position value (0-255), press Enter to confirm");
+                            int new_value = InputNumber(L"Input new pointing position value (0-4095), press Enter to confirm");
                             if (new_value >= 0 && new_value <= 4095) {
                                 controller1->SetPointingPosition(i, j, static_cast<int>(new_value));
                             }
+                            else if (new_value == 999999) continue;
                             else {
                                 std::cout << "Invalid input! Please input a number between 0 and 4095." << std::endl;
                                 cleardevice();

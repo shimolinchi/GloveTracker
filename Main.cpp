@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     TPCANBaudrate baudrate = PCAN_BAUD_1M;
     const int deviceCount = sizeof(handles) / sizeof(handles[0]);
     bool pcan_initialized[deviceCount] = { false };
-	int sucscessfulInits = 0;
+	int success_inits = 0;
 
     for (int i = 0; i < deviceCount; ++i) {
         TPCANHandle handle = handles[i];
@@ -74,25 +74,28 @@ int main(int argc, char* argv[])
 
         if (result == PCAN_ERROR_OK) {
             pcan_initialized[i] = true;
-			sucscessfulInits++;
+			success_inits++;
         }
         else {
             pcan->Uninitialize(handle); // 清理失败的通道
         }
     }
-	std::cout << std::endl << "Successfully initialized " << sucscessfulInits << " PCAN devices." << std::endl;
-	std::cout << pcan_initialized[0] << pcan_initialized[1] << std::endl;
+    if (success_inits == 0) std::cout << "No pcan device connected!" << std::endl;
+	else std::cout << std::endl << "Successfully initialized " << success_inits << " PCAN devices." << std::endl;
 
-    std::thread sdkclient_thread(SDKThread, sdk_client); Sleep(100);
+    std::thread sdkclient_thread(SDKThread, sdk_client); Sleep(2000);
     // 将 SDK 线程与主线程分离，允许其在后台独立运行
     sdkclient_thread.detach();
     std::cout << "SDK Client thread detached." << std::endl;
 
 	// 电机控制器初始化
 	int loaded_skeletons = 0;
+    int left_connected = 0;
+    int right_connected = 0;
     MotorController* controller_1 = nullptr; 
     MotorController* controller_2 = nullptr;
-	sdk_client->LoadSkeleton(Side::Side_Left); Sleep(100); //等待骨骼加载
+
+	sdk_client->LoadSkeleton(Side::Side_Left); Sleep(500); //等待骨骼加载
     if (pcan_initialized[0] && sdk_client->GetSkeletonCount() > 0) {
 		controller_1 = new MotorController(pcan, handles[0], sdk_client, true);
 		loaded_skeletons++;
