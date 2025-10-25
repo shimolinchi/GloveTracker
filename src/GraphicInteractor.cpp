@@ -1,6 +1,7 @@
 # include "GraphicInteractor.hpp"
 #include <sstream>
 #include <iomanip>
+# include "resource.h"
 
 GraphicInteractor::GraphicInteractor(MotorController* controller1, MotorController* controller2, Recorder* recorder): 
     running(true), 
@@ -231,11 +232,12 @@ void GraphicInteractor::StartCalibrate() {
     int winH = getheight();
     controller1->calibrating_process = CalibrateProcess::START;
 
-    // 加载带透明通道的 PNG 图片
+    // 加载带透明通道的 PNG 图片 (从资源加载)
     IMAGE image_flat;
     IMAGE image_fist;
-    loadimage(&image_flat, _T("picture/flat.png")); 
-    loadimage(&image_fist, _T("picture/fist.png")); 
+
+    loadimage(&image_flat, _T("PNG"), MAKEINTRESOURCE(IDB_PNG2)); 
+    loadimage(&image_fist, _T("PNG"), MAKEINTRESOURCE(IDB_PNG1)); 
 
     // 获取背景色
     COLORREF background_color = getbkcolor();
@@ -244,7 +246,7 @@ void GraphicInteractor::StartCalibrate() {
     int flat_w = image_flat.getwidth();
     int flat_h = image_flat.getheight();
     DWORD* flat_src = GetImageBuffer(&image_flat);
-    
+
     int fist_w = image_fist.getwidth();
     int fist_h = image_fist.getheight();
     DWORD* fist_src = GetImageBuffer(&image_fist);
@@ -377,7 +379,7 @@ void GraphicInteractor::StartCalibrate() {
         // std::cout << "stepping1\n";
     }
 
-        // ---------- 第三段：3 秒 ----------
+    // ---------- 第三段：3 秒 ----------
     auto start3 = std::chrono::steady_clock::now();
     while (controller1->calibrating_process == CalibrateProcess::SWITCH) {
         cleardevice();
@@ -414,7 +416,7 @@ void GraphicInteractor::StartCalibrate() {
         // std::cout << "switching\n";
     }
 
-        // ---------- 第四段：3 秒 ----------
+    // ---------- 第四段：3 秒 ----------
     auto start4 = std::chrono::steady_clock::now();
     while (controller1->calibrating_process == CalibrateProcess::STEP2) {
         cleardevice();
@@ -452,7 +454,6 @@ void GraphicInteractor::StartCalibrate() {
     }
     std::cout << "finished\n";
 }
-
 
 
 // 打印任意数据到指定位置
@@ -759,14 +760,13 @@ void GraphicInteractor::ChangePointingPosition() {
     int winW  = getwidth();
     int winH  = getheight();
     int start_y    = 120;   // 第一个按钮纵向位置中心
-    int start_x    = winW / 2 - 2 * (little_button_width + little_button_spacing); // 左侧按钮起始位置
+    int start_x    = winW / 2 - 1.5 * (little_button_width + little_button_spacing); // 左侧按钮起始位置
+    bool hover_save = false;
     while (true) {
         cleardevice();
         settextstyle(28, 0, _T("Consolas"));
         settextcolor(WHITE);
         DrawTitle(_T("Pointing Position Settings"));
-
-        // 窗口宽度
 
         // 获取鼠标位置
         POINT mouse;
@@ -789,6 +789,12 @@ void GraphicInteractor::ChangePointingPosition() {
             y = start_y;
             x += little_button_spacing + little_button_width;
         }
+
+        x = 840, y = 800;
+        hover_save = (mouse.x >= x && mouse.x <= x + 100 && mouse.y >= 800 && mouse.y <= 800 + little_button_height);
+        DrawButton(x, y, x + 100, y + little_button_height, little_round_radius, _T("save"), hover_save);
+                y += little_button_spacing;
+
 
         // 鼠标点击检测
         if (MouseHit()) {
@@ -813,6 +819,7 @@ void GraphicInteractor::ChangePointingPosition() {
                         }
                     }
                 }
+                if (hover_save) controller1->SavePointingPosition();
             }
             else if (msg.uMsg == WM_RBUTTONDOWN) {
                 return;
@@ -829,11 +836,11 @@ void GraphicInteractor::Run() {
     int winW  = getwidth();
     int winH  = getheight();
     while (controller1 == nullptr) {
-        std::cout << "Waiting for gloves or pcan..." << std::endl;
+        std::cout << "No Glove or pcan connected, please restart the program" << std::endl;
         cleardevice();
         settextcolor(WHITE);
         settextstyle(32, 0, _T("Consolas"));
-        outtextxy((winW - textwidth(_T("Waiting for gloves or pcan..."))) / 2, winH / 2, _T("Waiting for gloves or pcan..."));
+        outtextxy((winW - textwidth(_T("No Glove or pcan connected, please restart the program"))) / 2, winH / 2, _T("No Glove or pcan connected, please restart the program"));
         FlushBatchDraw();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
@@ -852,9 +859,7 @@ void GraphicInteractor::Run() {
             settextcolor(WHITE);
             DrawTitle(_T("Main Manu"));
 
-            // 窗口宽度
-            int start_y    = 180;   // 第一个按钮纵向位置中心
-
+            int start_y    = 180;  
             int btnX1 = (winW - button_width) / 2;
             int btnX2 = btnX1 + button_width;
 
@@ -874,7 +879,7 @@ void GraphicInteractor::Run() {
             DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Calibrate"), hoverCalibrate);
             y += button_spacing;
             bool hoverRecording  = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
-            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Recording"), hoverRecording);
+            DrawButton(btnX1, y,    btnX2, y + button_height, round_radius,_T("Record Data"), hoverRecording);
             y += button_spacing;
             bool hoverExchanging = (mouse.x >= btnX1 && mouse.x <= btnX2 && mouse.y >= y && mouse.y <= y + button_height);
             DrawButton(btnX1, y, btnX2, y + button_height, round_radius, _T("Exchange Hand"), hoverExchanging);
@@ -933,6 +938,7 @@ void GraphicInteractor::Run() {
             StartCalibrate();
             state = PanelState::MAIN_MENU;
         }
+        // ===== 数据记录界面 =====
         else if (state == PanelState::RECORDING) {
             Recording();
         }
@@ -941,6 +947,7 @@ void GraphicInteractor::Run() {
             ExchangeHand();
             state = PanelState::MAIN_MENU;
         }
+        // ===== 对指位置修改界面 =====
         else if (state == PanelState::POINTING_POS) {
             ChangePointingPosition();
             state = PanelState::MAIN_MENU;

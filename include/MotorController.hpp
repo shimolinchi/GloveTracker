@@ -10,6 +10,7 @@
 # include <algorithm>
 # include <numeric>
 # include <fstream>
+# include <filesystem>
 # include "SDKClient.hpp"
 # include "PCANBasic.hpp"
 # include "RyHandLib.h"
@@ -39,9 +40,11 @@ public:
     CalibrateProcess calibrating_process;
     ErgonomicsData glove_data;
     ClientSkeleton skeleton;
+    const std::string pointing_position_file_name;
     bool hand_side;
 
     MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client, bool hand_side);
+    void SavePointingPosition();
     void ChangeGloveHandSide();
     void SetPointingPosition(int finger_index, int motor_index, int position);
     int  GetPointingPosition(int finger_index, int motor_index);

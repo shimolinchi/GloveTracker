@@ -12,6 +12,7 @@
 # include "MotorController.hpp"
 # include "Recorder.hpp"
 # include <math.h>
+# include <gdiplus.h>
 #pragma execution_character_set("utf-8")
 
 enum class PanelState {

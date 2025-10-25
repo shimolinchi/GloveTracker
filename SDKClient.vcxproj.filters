@@ -20,5 +20,13 @@
     <ClInclude Include="include/math_utils.hpp" />
     <ClInclude Include="include/GraphicInteractor.hpp" />
     <ClInclude Include="include/Recorder.hpp" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Picture\fist.png" />
+    <Image Include="Picture\flat.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GloveTracker.rc" />
   </ItemGroup>
 </Project>

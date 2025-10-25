@@ -28,7 +28,8 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
     spread_limit    ({18.0f, 15.0f, 15.0f, 18.0f}),
     spread_coeff_neg({0.4f, 0.4f, 0.4f, 0.4f}),
     spread_coeff_pos({0.4f, 0.4f, 0.4f, 0.5f}),
-	tip_distances(4, 100.0f)
+	tip_distances(4, 100.0f),
+    pointing_position_file_name("pointing_motor_positions.txt")
     // pointing_motor_position(        {{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
     //                                 { 2170, 2170, 2280 ,0 ,0, 0, 1450, 1450, 2060, 0, 0, 0, 0, 0, 0, 3145 },
     //                                 { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
@@ -64,13 +65,14 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
         return row;
     };
 
-    const std::string filename = "pointing_motor_positions.txt";
+    // const std::string filename = "pointing_motor_positions.txt";
 
-    std::ifstream file(filename);
+    std::ifstream file(pointing_position_file_name);
     if (!file.is_open()) {
-        std::cerr << "Cannot open file: " << filename << std::endl;    
+        std::cerr << "Cannot open file: " << pointing_position_file_name << std::endl;    
+        // 默认对指姿势
         pointing_motor_position =         {{1900, 1900, 2950, 1200, 1200, 2418, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2000 },
-                                          { 2230, 2230, 2200 ,0 ,0, 0, 1600, 1150, 2260, 1367, 1571, 1422, 0, 0, 0, 3900 },
+                                          { 2179, 2179, 2264, 0, 0, 0, 1482, 1482, 2200, 0, 0, 0, 0, 0, 0, 3145},
                                           { 2303, 2369, 2400, 0, 0, 0, 0, 0, 0, 1161, 1161, 2000, 0, 0, 0, 3910 },
                                           { 1220, 2160, 2400, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1210, 1210, 1660, 4095 }};
         second_pointing_motor_position = {{ 3600, 3600, 1000, 1, 1, 2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1500 },
@@ -90,7 +92,7 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
         line.erase(line.find_last_not_of(" \t\n\r\f\v") + 1);
 
         // 跳过空行或注释行
-        if (line.empty() || line[0] == '#') {
+        if (line.empty() || line[0] == '#' || line.rfind("//", 0) == 0) {
             continue;
         }
 
@@ -113,7 +115,82 @@ MotorController::MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKCli
         }
     }
 
-    std::cout << "From " << filename << " loaded pointing motor position " << std::endl;
+    std::cout << "From " << pointing_position_file_name << " loaded pointing motor position " << std::endl;
+}
+
+void MotorController::SavePointingPosition() {
+    
+    const std::string& filename = pointing_position_file_name;
+    
+    // 1. 检查并创建父目录（如果 filename 包含路径）
+    // 这解决了当文件路径中目录不存在时 '无法创建文件' 的问题
+    std::filesystem::path file_path(filename);
+    std::filesystem::path dir_path = file_path.parent_path();
+    
+    // 如果 dir_path 不为空（即 filename 包含目录），则尝试创建
+    if (!dir_path.empty() && !std::filesystem::exists(dir_path)) {
+        try {
+            if (!std::filesystem::create_directories(dir_path)) {
+                // 如果创建目录失败，则输出错误并返回
+                std::cerr << "Error: Can not create a directory" << dir_path.string() << std::endl;
+                return;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error: An exception occurred while creating a directory (" << dir_path.string() << "): " << e.what() << std::endl;
+            return;
+        }
+    }
+
+    bool fileExists = std::filesystem::exists(filename);
+    std::ofstream file;
+
+    if (fileExists) {
+        // 文件存在：以追加模式打开
+        file.open(filename, std::ios::out | std::ios::app);
+    } else {
+        // 文件不存在：以输出模式打开（创建文件）
+        file.open(filename, std::ios::out);
+    }
+
+    if (!file.is_open()) {
+        // 如果打开失败（无论是追加还是创建），则报告错误
+        std::cerr << "Can not read or create file: " << filename << std::endl;
+        return;
+    }
+
+    // --- 写入数据逻辑 ---
+
+    if (fileExists) {
+        // 文件已存在，追加时添加注释
+        file << "\n# --- saved position ---\n";
+        file << "# pointing_motor_position\n";
+    } else {
+        // 文件是新创建的，写入头信息
+        file << "pointing_motor_position\n";
+    }
+
+    // 统一的写入数据的循环
+    for (size_t i = 0; i < pointing_motor_position.size(); ++i) {
+        if (fileExists) {
+            // 如果是追加，将数据行注释掉
+            file << "# "; 
+        }
+
+        for (size_t j = 0; j < pointing_motor_position[i].size(); ++j) {
+            file << pointing_motor_position[i][j];
+            if (j != pointing_motor_position[i].size() - 1) file << ", ";
+        }
+        file << "\n";
+    }
+
+    if (fileExists) {
+        file << "# --- save end ---\n";
+        std::cout << "Pointing position saved in: " << filename << std::endl;
+    } else {
+        std::cout << "File don't exist, create a new file: " << filename << std::endl;
+    }
+
+    file.close();
 }
 
 void MotorController::UpdateTipDistance() {
@@ -244,37 +321,42 @@ void MotorController::PointingOptimize() {
 void MotorController::Calibrate() {
 
     int sampleCount = 0;
-    std::vector<float> sum = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 前四个用于四指侧摆零点，第四到八个用于pip零点，第九到十二个用于dip零点， 第十三个个用于大拇指侧摆零点
+    std::vector<float> sum = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // 0~3用于四指侧摆零点，4~7用于mcp弯曲零点，8~11用于pip零点，12~15用于dip零点， 16用于大拇指侧摆零点
     while (calibrating_process != CalibrateProcess::STEP1) {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
     while (calibrating_process == CalibrateProcess::STEP1) {
         glove_data = client->GetGloveErgoData(hand_side);
         for(int i = 0; i < 4; i++){
             sum[i]     += glove_data.data[i * 4 + 4];
-            sum[i + 4] += glove_data.data[i * 4 + 6];
-            sum[i + 8] += glove_data.data[i * 4 + 7];
+            sum[i + 4] += glove_data.data[i * 4 + 5];
+            sum[i + 8] += glove_data.data[i * 4 + 6];
+            sum[i + 12] += glove_data.data[i * 4 + 7];
         }
-        sum[12] += glove_data.data[0];
+        sum[16] += glove_data.data[0];
         sampleCount++;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
-    float validation_threshold = 10.0f;
+    float validation_threshold = 15.0f;
     for(int i = 0; i < 4; i++){
         float temp_mcp_spread_zero = sum[i] / sampleCount;
         if (abs(temp_mcp_spread_zero - mcp_spread_zero_position[i]) < validation_threshold ) {
             mcp_spread_zero_position[i] = temp_mcp_spread_zero;
         }
-        float temp_pip_zero = sum[i + 4] / sampleCount;
+        float temp_mcp_stretch_zero = sum[i + 4] / sampleCount;
+        if (abs(temp_mcp_stretch_zero - mcp_spread_zero_position[i]) < validation_threshold ) {
+            mcp_stretch_limit[i][0] = temp_mcp_stretch_zero;
+        }
+        float temp_pip_zero = sum[i + 8] / sampleCount;
         if (abs(temp_pip_zero - pip_limit[i][0] + 2.0f) < validation_threshold ) {
             pip_limit[i][0] = temp_pip_zero + 2.0f;
         }
-        float temp_dip_zero = sum[i + 8] / sampleCount;
+        float temp_dip_zero = sum[i + 12] / sampleCount;
         if (abs(temp_dip_zero - dip_limit[i][0] + 2.0f) < validation_threshold ) {
             dip_limit[i][0] = temp_dip_zero + 2.0f;
         }
     }
-    float temp_thumb_cmc_spread_zero = sum[12] / sampleCount;
+    float temp_thumb_cmc_spread_zero = sum[16] / sampleCount;
     if (abs(temp_thumb_cmc_spread_zero - thumb_cmc_spread_limit[0]) < validation_threshold ) {
         thumb_cmc_spread_limit[0] = temp_thumb_cmc_spread_zero;
     }
