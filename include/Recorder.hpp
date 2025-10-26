@@ -14,6 +14,7 @@ private:
     std::ofstream file;
     std::string file_name = "position_list.csv";
     int frequency;
+    // const std::string pointing_position_file_name;
 public:
     std::atomic<bool> recording{false};
     Recorder(MotorController* controller, int frequency = 2);
@@ -25,6 +26,7 @@ public:
     void SetFrequency(int frequency);
     int  GetFrequency();
     void SaveFile();
+    void SavePointingPosition();
     void Run();
     std::string GetFileName() const ;
 };

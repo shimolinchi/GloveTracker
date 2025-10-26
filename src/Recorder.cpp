@@ -27,7 +27,8 @@ std::wstring Recorder::ChangeFile(const std::string& f_name) {
     return s2ws("File has been change to:" + file_name);
 }
 
-Recorder::Recorder(MotorController* controller, int frequency):controller(controller), recording(false), frequency(frequency){
+Recorder::Recorder(MotorController* controller, int frequency):controller(controller), recording(false), frequency(frequency)
+{
 }
 
 std::wstring Recorder::RecordPosOnce() {
@@ -80,6 +81,81 @@ void Recorder::SaveFile() {
 }
 
 std::string Recorder::GetFileName() const { return file_name; }
+
+void Recorder::SavePointingPosition() {
+    
+    const std::string& filename = controller->pointing_position_file_name;
+    
+    // 1. 检查并创建父目录（如果 filename 包含路径）
+    // 这解决了当文件路径中目录不存在时 '无法创建文件' 的问题
+    std::filesystem::path file_path(filename);
+    std::filesystem::path dir_path = file_path.parent_path();
+    
+    // 如果 dir_path 不为空（即 filename 包含目录），则尝试创建
+    if (!dir_path.empty() && !std::filesystem::exists(dir_path)) {
+        try {
+            if (!std::filesystem::create_directories(dir_path)) {
+                // 如果创建目录失败，则输出错误并返回
+                std::cerr << "Error: Can not create a directory" << dir_path.string() << std::endl;
+                return;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error: An exception occurred while creating a directory (" << dir_path.string() << "): " << e.what() << std::endl;
+            return;
+        }
+    }
+
+    bool fileExists = std::filesystem::exists(filename);
+    std::ofstream file;
+
+    if (fileExists) {
+        // 文件存在：以追加模式打开
+        file.open(filename, std::ios::out | std::ios::app);
+    } else {
+        // 文件不存在：以输出模式打开（创建文件）
+        file.open(filename, std::ios::out);
+    }
+
+    if (!file.is_open()) {
+        // 如果打开失败（无论是追加还是创建），则报告错误
+        std::cerr << "Can not read or create file: " << filename << std::endl;
+        return;
+    }
+
+    // --- 写入数据逻辑 ---
+
+    if (fileExists) {
+        // 文件已存在，追加时添加注释
+        file << "\n# --- saved position ---\n";
+        file << "# pointing_motor_position\n";
+    } else {
+        // 文件是新创建的，写入头信息
+        file << "pointing_motor_position\n";
+    }
+
+    // 统一的写入数据的循环
+    for (size_t i = 0; i < 4; ++i) {
+        if (fileExists) {
+            // 如果是追加，将数据行注释掉
+            file << "# "; 
+        }
+
+        for (size_t j = 0; j < 16; ++j) {
+            file << controller->GetPointingPosition(i, j);
+            if (j != 15) file << ", ";
+        }
+        file << "\n";
+    }
+
+    if (fileExists) {
+        file << "# --- save end ---\n";
+        std::cout << "Pointing position saved in: " << filename << std::endl;
+    } else {
+        std::cout << "File don't exist, create a new file: " << filename << std::endl;
+    }
+
+    file.close();
+}
 
 void Recorder::Run(){
     while (true) {

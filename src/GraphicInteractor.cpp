@@ -819,7 +819,7 @@ void GraphicInteractor::ChangePointingPosition() {
                         }
                     }
                 }
-                if (hover_save) controller1->SavePointingPosition();
+                if (hover_save) recorder->SavePointingPosition();
             }
             else if (msg.uMsg == WM_RBUTTONDOWN) {
                 return;

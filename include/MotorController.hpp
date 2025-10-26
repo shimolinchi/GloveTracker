@@ -44,7 +44,7 @@ public:
     bool hand_side;
 
     MotorController(PCANBasic* pcan, TPCANHandle PcanHandle, SDKClient* client, bool hand_side);
-    void SavePointingPosition();
+    // void SavePointingPosition();
     void ChangeGloveHandSide();
     void SetPointingPosition(int finger_index, int motor_index, int position);
     int  GetPointingPosition(int finger_index, int motor_index);
