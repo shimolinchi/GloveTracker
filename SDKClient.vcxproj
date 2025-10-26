@@ -59,7 +59,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>ManusSDK\include;PlatformSpecific;PlatformSpecific\Windows;PlatformSpecific;PlatformSpecific\Windows;%(AdditionalIncludeDirectories);$(ProjectDir)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>ManusSDK\include;PlatformSpecific;PlatformSpecific\Windows;PlatformSpecific;PlatformSpecific\Windows;%(AdditionalIncludeDirectories);$(ProjectDir)\include;$(ProjectDir)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>

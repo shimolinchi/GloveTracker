@@ -80,8 +80,6 @@ int main(int argc, char* argv[])
             pcan->Uninitialize(handle); // 清理失败的通道
         }
     }
-    if (success_inits == 0) std::cout << "No pcan device connected!" << std::endl;
-	else std::cout << std::endl << "Successfully initialized " << success_inits << " PCAN devices." << std::endl;
 
     std::thread sdkclient_thread(SDKThread, sdk_client); Sleep(2000);
     // 将 SDK 线程与主线程分离，允许其在后台独立运行
@@ -116,8 +114,10 @@ int main(int argc, char* argv[])
     // 图形界面初始化
     GraphicInteractor* interactor = new GraphicInteractor(controller_1, controller_2, recorder);
 	std::cout << "Graphic interactor initialized." << std::endl;
-    
 
+    if (success_inits == 0) std::cout << "No pcan device connected!" << std::endl;
+	else std::cout << std::endl << "Successfully initialized " << success_inits << " PCAN devices." << std::endl;
+    
     std::thread controller_1_thread;
 	if (controller_1) controller_1_thread = std::thread(CtrlThread, controller_1);
     std::thread controller_2_thread;
