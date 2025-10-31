@@ -1,8 +1,23 @@
+/*
+ * filename: Recorder.cpp
+ * author: Rui Wang
+ * version: 1.0.0
+ * created: 2025
+ * 
+ * This program is protected by copyright law. 
+ * Copyright © 2025 Rui Wang. All rights reserved.
+ *
+ * Unauthorized reproduction, distribution, or modification of this software, 
+ * in whole or in part, without explicit written permission from the author 
+ * is strictly prohibited.
+ *
+ * Contact: shimolinchi@gmail.com
+ */
 # include "Recorder.hpp"
-#include <string>
-#include <fstream>
-#include <codecvt>
-#include <locale>
+# include <string>
+# include <fstream>
+# include <codecvt>
+# include <locale>
 
 
 std::wstring s2ws(const std::string& str) {

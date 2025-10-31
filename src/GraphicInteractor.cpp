@@ -1,6 +1,21 @@
+/*
+ * filename: GraphicInteractor.cpp
+ * author: Rui Wang
+ * version: 1.0.0
+ * created: 2025
+ * 
+ * This program is protected by copyright law. 
+ * Copyright © 2025 Rui Wang. All rights reserved.
+ *
+ * Unauthorized reproduction, distribution, or modification of this software, 
+ * in whole or in part, without explicit written permission from the author 
+ * is strictly prohibited.
+ *
+ * Contact: shimolinchi@gmail.com
+ */
 # include "GraphicInteractor.hpp"
-#include <sstream>
-#include <iomanip>
+# include <sstream>
+# include <iomanip>
 # include "resource.h"
 
 GraphicInteractor::GraphicInteractor(MotorController* controller1, MotorController* controller2, Recorder* recorder): 

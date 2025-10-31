@@ -47,6 +47,7 @@
                 "/I", "PlatformSpecific\\Windows",
                 "/I", "..\\Externals",
                 "/I", "${workspaceFolder}\\include",
+                "/I", "${workspaceFolder}",
                 "/I", "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\VS\\include",
 
                 // ============== 输出文件设置 ==============

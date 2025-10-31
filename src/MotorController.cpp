@@ -1,4 +1,19 @@
-#include "MotorController.hpp"
+/*
+ * filename: MotorController.cpp
+ * author: Rui Wang
+ * version: 1.0.0
+ * created: 2025
+ * 
+ * This program is protected by copyright law. 
+ * Copyright © 2025 Rui Wang. All rights reserved.
+ *
+ * Unauthorized reproduction, distribution, or modification of this software, 
+ * in whole or in part, without explicit written permission from the author 
+ * is strictly prohibited.
+ *
+ * Contact: shimolinchi@gmail.com
+ */
+# include "MotorController.hpp"
 
 // --- 初始化所有静态常量 ---
 std::vector<float> MotorController::thumb_ip_limit = { 0.0f, 65.0f };
